@@ -152,7 +152,7 @@ function MasteryBar({
   mastery: number;
   count: number;
   color: string;
-  Icon: React.ComponentType<{ className?: string }>;
+  Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }) {
   return (
     <div>
