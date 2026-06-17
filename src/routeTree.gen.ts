@@ -9,61 +9,236 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedTutorRouteImport } from './routes/_authenticated/tutor'
+import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
+import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor.index'
+import { Route as AuthenticatedTutorThreadIdRouteImport } from './routes/_authenticated/tutor.$threadId'
+import { Route as AuthenticatedLearnSessionIdRouteImport } from './routes/_authenticated/learn.$sessionId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTutorRoute = AuthenticatedTutorRouteImport.update({
+  id: '/tutor',
+  path: '/tutor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTutorIndexRoute = AuthenticatedTutorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedTutorRoute,
+} as any)
+const AuthenticatedTutorThreadIdRoute =
+  AuthenticatedTutorThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedTutorRoute,
+  } as any)
+const AuthenticatedLearnSessionIdRoute =
+  AuthenticatedLearnSessionIdRouteImport.update({
+    id: '/learn/$sessionId',
+    path: '/learn/$sessionId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/progress': typeof AuthenticatedProgressRoute
+  '/tutor': typeof AuthenticatedTutorRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
+  '/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
+  '/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
+  '/tutor/': typeof AuthenticatedTutorIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/progress': typeof AuthenticatedProgressRoute
+  '/api/chat': typeof ApiChatRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
+  '/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
+  '/tutor': typeof AuthenticatedTutorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/progress': typeof AuthenticatedProgressRoute
+  '/_authenticated/tutor': typeof AuthenticatedTutorRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
+  '/_authenticated/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
+  '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/progress'
+    | '/tutor'
+    | '/api/chat'
+    | '/learn/$sessionId'
+    | '/tutor/$threadId'
+    | '/tutor/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/auth'
+    | '/progress'
+    | '/api/chat'
+    | '/'
+    | '/learn/$sessionId'
+    | '/tutor/$threadId'
+    | '/tutor'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/progress'
+    | '/_authenticated/tutor'
+    | '/api/chat'
+    | '/_authenticated/'
+    | '/_authenticated/learn/$sessionId'
+    | '/_authenticated/tutor/$threadId'
+    | '/_authenticated/tutor/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/tutor': {
+      id: '/_authenticated/tutor'
+      path: '/tutor'
+      fullPath: '/tutor'
+      preLoaderRoute: typeof AuthenticatedTutorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/progress': {
+      id: '/_authenticated/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof AuthenticatedProgressRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/': {
+      id: '/_authenticated/tutor/'
+      path: '/'
+      fullPath: '/tutor/'
+      preLoaderRoute: typeof AuthenticatedTutorIndexRouteImport
+      parentRoute: typeof AuthenticatedTutorRoute
+    }
+    '/_authenticated/tutor/$threadId': {
+      id: '/_authenticated/tutor/$threadId'
+      path: '/$threadId'
+      fullPath: '/tutor/$threadId'
+      preLoaderRoute: typeof AuthenticatedTutorThreadIdRouteImport
+      parentRoute: typeof AuthenticatedTutorRoute
+    }
+    '/_authenticated/learn/$sessionId': {
+      id: '/_authenticated/learn/$sessionId'
+      path: '/learn/$sessionId'
+      fullPath: '/learn/$sessionId'
+      preLoaderRoute: typeof AuthenticatedLearnSessionIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedTutorRouteChildren {
+  AuthenticatedTutorThreadIdRoute: typeof AuthenticatedTutorThreadIdRoute
+  AuthenticatedTutorIndexRoute: typeof AuthenticatedTutorIndexRoute
+}
+
+const AuthenticatedTutorRouteChildren: AuthenticatedTutorRouteChildren = {
+  AuthenticatedTutorThreadIdRoute: AuthenticatedTutorThreadIdRoute,
+  AuthenticatedTutorIndexRoute: AuthenticatedTutorIndexRoute,
+}
+
+const AuthenticatedTutorRouteWithChildren =
+  AuthenticatedTutorRoute._addFileChildren(AuthenticatedTutorRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
+  AuthenticatedTutorRoute: typeof AuthenticatedTutorRouteWithChildren
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedLearnSessionIdRoute: typeof AuthenticatedLearnSessionIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedProgressRoute: AuthenticatedProgressRoute,
+  AuthenticatedTutorRoute: AuthenticatedTutorRouteWithChildren,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedLearnSessionIdRoute: AuthenticatedLearnSessionIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
