@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getSession, generateQuiz, submitQuiz } from "@/lib/study.functions";
@@ -280,15 +280,17 @@ function QuizRunner({
 }) {
   const limitMin = mode === "timed" ? 5 : mode === "weekly" ? 15 : null;
   const [now, setNow] = useState(Date.now());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useState(() => {
+  useEffect(() => {
     if (!limitMin) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
-    return id;
-  });
+    return () => clearInterval(id);
+  }, [limitMin]);
   const elapsed = startTime ? Math.floor((now - startTime) / 1000) : 0;
   const remaining = limitMin ? limitMin * 60 - elapsed : null;
-  if (remaining !== null && remaining <= 0 && !submitting) onSubmit();
+  useEffect(() => {
+    if (remaining !== null && remaining <= 0 && !submitting) onSubmit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining, submitting]);
 
   return (
     <div className="space-y-3">
