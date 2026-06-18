@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
-import { Flame, Trophy, BookOpen, Target, Calculator, FlaskConical, Loader2 } from "lucide-react";
+import { Flame, Trophy, BookOpen, Target, Loader2, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/progress")({
   component: ProgressPage,
@@ -24,21 +24,34 @@ function ProgressPage() {
   const profile = q.data?.profile;
   const sessions = q.data?.sessions ?? [];
   const attempts = q.data?.attempts ?? [];
+  const homework = q.data?.homework ?? [];
 
-  const totalAttempts = attempts.length;
   const totalScore = attempts.reduce((s, a) => s + a.score, 0);
   const totalQuestions = attempts.reduce((s, a) => s + a.total, 0);
   const accuracy = totalQuestions ? Math.round((totalScore / totalQuestions) * 100) : 0;
   const completed = sessions.filter((s) => s.completed).length;
 
-  const bySubject = (subject: "Math" | "Science") => {
-    const items = attempts.filter((a) => a.subject === subject);
-    const score = items.reduce((s, a) => s + a.score, 0);
-    const total = items.reduce((s, a) => s + a.total, 0);
-    return { count: items.length, mastery: total ? Math.round((score / total) * 100) : 0 };
-  };
-  const math = bySubject("Math");
-  const sci = bySubject("Science");
+  // Group attempts by subject
+  const bySubject = new Map<string, { score: number; total: number; count: number }>();
+  attempts.forEach((a) => {
+    const cur = bySubject.get(a.subject) ?? { score: 0, total: 0, count: 0 };
+    cur.score += a.score;
+    cur.total += a.total;
+    cur.count += 1;
+    bySubject.set(a.subject, cur);
+  });
+
+  // Exam track breakdown
+  const examAttempts = attempts.filter((a) => a.exam_track);
+  const byTrack = new Map<string, { score: number; total: number; count: number }>();
+  examAttempts.forEach((a) => {
+    const k = a.exam_track ?? "Other";
+    const cur = byTrack.get(k) ?? { score: 0, total: 0, count: 0 };
+    cur.score += a.score;
+    cur.total += a.total;
+    cur.count += 1;
+    byTrack.set(k, cur);
+  });
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-5 pb-24 space-y-5">
@@ -56,21 +69,34 @@ function ProgressPage() {
 
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold">Subject mastery</h3>
-        <MasteryBar
-          label="Math"
-          mastery={math.mastery}
-          count={math.count}
-          color="var(--color-math)"
-          Icon={Calculator}
-        />
-        <MasteryBar
-          label="Science"
-          mastery={sci.mastery}
-          count={sci.count}
-          color="var(--color-science)"
-          Icon={FlaskConical}
-        />
+        {bySubject.size === 0 ? (
+          <p className="text-sm text-muted-foreground">No quizzes yet. Take one from a lesson to start tracking.</p>
+        ) : (
+          [...bySubject.entries()].map(([subject, s]) => (
+            <MasteryBar
+              key={subject}
+              label={subject}
+              mastery={s.total ? Math.round((s.score / s.total) * 100) : 0}
+              count={s.count}
+            />
+          ))
+        )}
       </Card>
+
+      {byTrack.size > 0 && (
+        <Card className="p-5 space-y-3">
+          <h3 className="font-semibold">Competitive exam progress</h3>
+          {[...byTrack.entries()].map(([track, s]) => (
+            <MasteryBar
+              key={track}
+              label={track}
+              mastery={s.total ? Math.round((s.score / s.total) * 100) : 0}
+              count={s.count}
+              color="var(--color-flame)"
+            />
+          ))}
+        </Card>
+      )}
 
       <Card className="p-5">
         <h3 className="font-semibold mb-3">Recent sessions</h3>
@@ -79,13 +105,13 @@ function ProgressPage() {
         ) : (
           <div className="space-y-2">
             {sessions.slice(0, 8).map((s) => (
-              <div key={s.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/50 last:border-b-0">
+              <div key={s.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/50 last:border-b-0 gap-2">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{s.topic}</p>
-                  <p className="text-xs text-muted-foreground">{s.subject}</p>
+                  <p className="text-xs text-muted-foreground truncate">{s.subject}{s.section && s.section !== "school" ? ` · ${s.section}` : ""}</p>
                 </div>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                  className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                     s.completed ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -98,16 +124,18 @@ function ProgressPage() {
       </Card>
 
       <Card className="p-5">
-        <h3 className="font-semibold mb-3">Recent quizzes</h3>
-        {totalAttempts === 0 ? (
-          <p className="text-sm text-muted-foreground">No quizzes yet.</p>
+        <h3 className="font-semibold mb-3 flex items-center gap-2">
+          <Camera className="size-4 text-primary" /> Recent homework
+        </h3>
+        {homework.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No homework photos uploaded yet.</p>
         ) : (
           <div className="space-y-1.5">
-            {attempts.slice(0, 8).map((a, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{a.subject}</span>
-                <span className="font-semibold">
-                  {a.score}/{a.total}
+            {homework.map((h) => (
+              <div key={h.id} className="flex items-center justify-between text-sm gap-2">
+                <span className="truncate">{h.title}</span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {new Date(h.created_at).toLocaleDateString()}
                 </span>
               </div>
             ))}
@@ -128,10 +156,7 @@ function Stat({ icon: Icon, label, value, tint }: { icon: React.ComponentType<{ 
   return (
     <Card className="p-3">
       <div className="flex items-center gap-2">
-        <div
-          className="size-8 rounded-lg grid place-items-center text-white"
-          style={{ backgroundColor: colorMap[tint] }}
-        >
+        <div className="size-8 rounded-lg grid place-items-center text-white" style={{ backgroundColor: colorMap[tint] }}>
           <Icon className="size-4" />
         </div>
         <p className="text-xs text-muted-foreground">{label}</p>
@@ -141,35 +166,17 @@ function Stat({ icon: Icon, label, value, tint }: { icon: React.ComponentType<{ 
   );
 }
 
-function MasteryBar({
-  label,
-  mastery,
-  count,
-  color,
-  Icon,
-}: {
-  label: string;
-  mastery: number;
-  count: number;
-  color: string;
-  Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-}) {
+function MasteryBar({ label, mastery, count, color = "var(--color-primary)" }: { label: string; mastery: number; count: number; color?: string }) {
   return (
     <div>
-      <div className="flex items-center justify-between text-sm mb-1.5">
-        <span className="flex items-center gap-2 font-medium">
-          <Icon className="size-4" style={{ color }} />
-          {label}
-        </span>
-        <span className="text-muted-foreground text-xs">
+      <div className="flex items-center justify-between text-sm mb-1.5 gap-2">
+        <span className="font-medium truncate">{label}</span>
+        <span className="text-muted-foreground text-xs shrink-0">
           {count} quizzes · <span className="font-semibold text-foreground">{mastery}%</span>
         </span>
       </div>
       <div className="h-2 rounded-full bg-muted overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${mastery}%`, backgroundColor: color }}
-        />
+        <div className="h-full rounded-full transition-all" style={{ width: `${mastery}%`, backgroundColor: color }} />
       </div>
     </div>
   );
