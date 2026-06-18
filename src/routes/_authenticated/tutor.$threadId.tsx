@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, Flame } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { StudyMarkdown } from "@/components/study-markdown";
 
 export const Route = createFileRoute("/_authenticated/tutor/$threadId")({
   component: ThreadView,
@@ -131,8 +131,8 @@ function Chat({
           }
           return (
             <div key={m.id} className="max-w-full">
-              <article className="prose-study text-sm">
-                <ReactMarkdown>{text}</ReactMarkdown>
+              <article className="prose-study text-[0.95rem] leading-relaxed break-words">
+                <StudyMarkdown>{text}</StudyMarkdown>
               </article>
             </div>
           );
