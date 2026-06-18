@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calculator, FlaskConical, MessageCircle, Sparkles, CheckCircle2, XCircle, Loader2, Trophy, Clock, RotateCcw } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { StudyMarkdown } from "@/components/study-markdown";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/learn/$sessionId")({
@@ -143,7 +143,7 @@ function SessionPage() {
         <TabsContent value="lesson" className="mt-4">
           <Card className="p-5">
             <article className="prose-study">
-              <ReactMarkdown>{session.lesson_md ?? ""}</ReactMarkdown>
+              <StudyMarkdown>{session.lesson_md ?? ""}</StudyMarkdown>
             </article>
             <div className="mt-6 pt-4 border-t border-border flex flex-wrap gap-2">
               <Button onClick={() => setTab("quiz")} className="gap-1.5">
