@@ -1,96 +1,88 @@
-## StudyGenie — AI Learning App for 11-12 (Math & Science)
+# StudyGenie 9–12 Upgrade
 
-A focused study app where students pick a grade and topic, get AI-generated lessons and quizzes, chat with an AI tutor about doubts (with threaded history), and track their progress.
+Focused rebuild of the learner-facing surface. Backend tables stay; we widen the subject list, add three new sections, and tune the AI tutor for simple student language.
 
-### Tech & backend
+## 1. Class & Subject scope
 
-- TanStack Start + React + Tailwind (existing stack)
-- Lovable Cloud for auth (email + Google), database, and storing chats/progress
-- Lovable AI Gateway (`google/gemini-3-flash-preview`) for lessons, quizzes, and tutor
-- AI Elements for the tutor chat surface
+- Grade picker reduced to **9, 10, 11, 12** on Home and everywhere a grade is asked.
+- Subject list replaced with: **Mathematics, Physics, Chemistry, Biology, English, EVS, Social Studies**.
+- Tapping **Social Studies** opens a sub-picker: History, Civics, Geography, Disaster Management, Road Safety Education. The chosen sub-subject is stored as the `topic` parent context.
+- Server enum widens accordingly; existing `Math/Science` rows still readable (we accept legacy values).
 
-### Auth
+## 2. Bottom navigation
 
-- Email/password + Google sign-in
-- A `profiles` table (display name, avatar) auto-created on signup
-- Protected app routes live under `_authenticated/`
+Five tabs: **Learn | Tutor | Homework | Exams | Progress**. Mobile bottom bar grows to 5 columns; desktop header gets the same links.
 
-### Core pages
+## 3. New section — Competitive Exams (`/exams`)
 
-1. `**/auth**` — sign in / sign up
-2. `/` **(home, authenticated)** — Pick grade (11-12) and subject (Math / Science), then choose a topic from a generated topic list or type a custom topic. Shows weekly streak, XP, and "Continue learning" card.
-3. `**/learn/$session**` — A study session for the chosen topic:
-  - **Lesson** tab: AI-generated explanation with examples, formulas, diagrams-in-text
-  - **Quiz** tab: 5–10 MCQs with instant feedback + explanation
-  - **Ask tutor** button → opens a new tutor thread pre-loaded with topic context
-  - On completion: XP awarded, topic marked complete, recorded in progress
-  - Easy Notes for each chapters from each subjects.
-  - Easy diagrams and illustrations wherever necessary 
-  - Practice questions banks and NCERT exemplar
-  - Focus on the difficulty level of NEET and JEE exams and make the preparation easier.
-  - Practice sets for problems 
-  - Tests with minimum questions in minimum time in rounds and especially a weekend full chapter test from each chapter.
+Separate route, not mixed with school flow. User picks an exam track (JEE, NEET, CUET, Olympiad, NTSE, Other) then a topic. Server functions:
 
-&nbsp;
+- `listExamTracks` (static list)
+- `startExamLesson(track, topic)` — generates: easy explanation → solved examples → practice questions
+- `generateChapterTest(track, topic)` — 10 Q chapter test
+- `generateTestSeries(track)` — 25 Q mixed test
+- Reuses `quiz_attempts` with new `mode='exam'` + `exam_track` column
 
-1. `**/tutor**` — threaded AI tutor chat
-  - Sidebar with past threads (rename/delete)
-  - New thread auto-titles from first question
-  - Each thread at `/tutor/$threadId`
-  - Built with AI Elements (Conversation, Message, PromptInput, Shimmer)
-2. `**/progress**` — dashboard
-  - Streak, total XP, topics completed by subject
-  - Quiz accuracy over time
-  - Per-subject mastery bars
+Progress for exams shown in the Progress page under its own card.
 
-### Data model (Lovable Cloud)
+## 4. NCERT Library (`/ncert`)
 
-- `profiles` — id (=auth user), display_name, avatar_url, current_streak, last_active_date, total_xp
-- `study_sessions` — id, user_id, grade, subject, topic, lesson_md, completed, xp_awarded, created_at
-- `quiz_attempts` — id, session_id, user_id, questions(jsonb), score, total, created_at, timer 
-- `tutor_threads` — id, user_id, title, grade, subject, updated_at
-- `tutor_messages` — id, thread_id, user_id, role, parts(jsonb), created_at
-- RLS: every table scoped to `auth.uid()`; explicit GRANTs to `authenticated`
+- Pick **Class** then **Subject** → AI returns NCERT chapter list (cached per class+subject).
+- Chapter detail page: AI generates structured lesson with sections — *Easy Explanation, Notes, Worked Examples, Diagrams (described in markdown / simple ASCII or emoji), Important Questions with Answers, Step-by-Step Recap*.
+- "Ask Tutor about this chapter" button opens a tutor thread pre-seeded with chapter context.
 
-### Server functions (`src/lib/*.functions.ts`)
+## 5. Homework (`/homework`)
 
-- `generateLesson({ grade, subject, topic })` → markdown lesson via Lovable AI
-- `generateQuiz({ grade, subject, topic })` → structured MCQs via AI SDK `Output.object` with Zod schema
-- `gradeQuiz({ sessionId, answers })` → score, update XP/streak
-- `suggestTopics({ grade, subject })` → 8 topic chips
-- `listThreads` / `createThread` / `renameThread` / `deleteThread`
-- `loadThreadMessages({ threadId })`
-- Chat streaming endpoint at `src/routes/api/chat.ts` using `streamText` + `toUIMessageStreamResponse`, persisting messages in `onFinish` with thread context (grade/subject) injected into the system prompt
-- All protected by `requireSupabaseAuth`
+- Camera/file input (`<input type="file" accept="image/*" capture="environment">`).
+- Uploads image as base64 to `solveHomework` server fn → Gemini multimodal (chat-completions endpoint with `image_url` data URL, since AI SDK message converter blocks non-wav audio but images are fine).
+- Returns: detected questions, step-by-step solutions, neat-notes markdown.
+- Stored in new `homework_items` table (image stored as data URL string for simplicity; small images only — we downscale client-side to ~1024px).
+- History list on `/homework` with thumbnail + topic.
 
-### Design direction
+## 6. AI Tutor tone
 
-- Friendly, school-appropriate: rounded cards, soft pastels, clear typography, big readable text
-- Math = blue accent, Science = green accent
-- Mobile-first (current viewport is mobile)
-- Subject-specific iconography (no generic Sparkles for tutor identity — generate a small mascot/logo)
-- Overal red orange mix theme.
+System prompt updated everywhere: "Explain like a friendly senior teaching a Class 9–12 Indian student. Use very simple words. Short notes. Bit-by-bit steps. Always give an example before the exercise. Use small diagrams (ASCII / emoji / markdown tables) when helpful. Avoid jargon."
 
-### Gamification (lightweight)
+## 7. Database migration
 
-- +10 XP per lesson completed, +5 XP per correct quiz answer
-- Daily streak increments when any session is completed
-- Visible streak flame + XP badge in header
+New columns/tables:
 
-### Out of scope for v1
+```sql
+ALTER TABLE quiz_attempts ADD COLUMN exam_track text;
+ALTER TABLE study_sessions ADD COLUMN section text DEFAULT 'school'; -- 'school' | 'exam' | 'ncert'
+ALTER TABLE study_sessions ADD COLUMN sub_subject text;
 
-- Parent/teacher dashboards
-- Payments
-- Voice input
-- Real-time collaboration
+CREATE TABLE homework_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  image_data_url text not null,
+  questions jsonb,
+  solution_md text,
+  notes_md text,
+  created_at timestamptz not null default now()
+);
+-- + GRANTs + RLS scoped to auth.uid()
+```
 
-### Build order
+Grade check loosened (we keep int 1–12 to avoid breaking old rows) but UI only offers 9–12.
 
-1. Enable Lovable Cloud + provision Lovable AI key
-2. DB migration (profiles + tables + RLS + GRANTs + signup trigger)
-3. Auth page + `_authenticated` integration
-4. Home (grade/subject/topic picker) + topic suggestions server fn
-5. Study session page: lesson + quiz generation + grading + performance certificate 
-6. Tutor threaded chat (AI Elements + chat route)
-7. Progress dashboard
-8. Polish: design tokens, mascot/logo, streak header
+## 8. UI / Design
+
+Keep the warm reddish-orange rounded look. New cards use the same `rounded-2xl`, `border-border`, primary accent. Subject grid becomes a 2-col mobile / 3-col tablet layout with subject-color chips (Math, Physics, Chem, Bio, Eng, EVS, Social each get a token color). Bottom nav uses `grid-cols-5`.
+
+## Out of scope
+
+- OCR fine-tuning beyond what Gemini provides.
+- Real diagrams (we describe / use simple SVG-ish markdown). No image generation in lessons.
+- Per-board (CBSE/ICSE/State) variants — assume NCERT/CBSE.
+
+## Build order
+
+1. Migration (schema additions)
+2. Subject/grade refactor on Home + tutor prompt
+3. Bottom nav → 5 tabs
+4. NCERT Library route + server fns
+5. Competitive Exams route + server fns
+6. Homework route + multimodal server fn + table writes
+7. Progress page: add Exams + Homework summaries
+8. Polish (responsive, empty states)

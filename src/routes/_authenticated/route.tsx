@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/study.functions";
-import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut } from "lucide-react";
+import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut, Camera, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -36,25 +36,27 @@ function AuthedLayout() {
   }
 
   const navItems = [
-    { to: "/", label: "Learn", icon: Home },
-    { to: "/tutor", label: "Tutor", icon: MessageCircle },
-    { to: "/progress", label: "Progress", icon: BarChart3 },
+    { to: "/", label: "Learn", icon: Home, match: (p: string) => p === "/" || p.startsWith("/learn") || p.startsWith("/ncert") },
+    { to: "/tutor", label: "Tutor", icon: MessageCircle, match: (p: string) => p.startsWith("/tutor") },
+    { to: "/homework", label: "Homework", icon: Camera, match: (p: string) => p.startsWith("/homework") },
+    { to: "/exams", label: "Exams", icon: Trophy, match: (p: string) => p.startsWith("/exams") },
+    { to: "/progress", label: "Progress", icon: BarChart3, match: (p: string) => p.startsWith("/progress") },
   ] as const;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-30 backdrop-blur bg-background/85 border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-primary text-primary-foreground grid place-items-center">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <div className="size-8 shrink-0 rounded-lg bg-primary text-primary-foreground grid place-items-center">
               <Flame className="size-4" />
             </div>
-            <span className="font-bold tracking-tight">StudyGenie</span>
+            <span className="font-bold tracking-tight truncate">StudyGenie</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/60 text-accent-foreground text-xs font-medium">
               <Flame className="size-3.5 text-flame" />
-              <span>{profile?.current_streak ?? 0} day streak</span>
+              <span>{profile?.current_streak ?? 0}d</span>
             </div>
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
               <GraduationCap className="size-3.5" />
@@ -72,17 +74,14 @@ function AuthedLayout() {
       </main>
 
       <nav className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-5">
           {navItems.map((item) => {
-            const active =
-              item.to === "/"
-                ? pathname === "/" || pathname.startsWith("/learn")
-                : pathname.startsWith(item.to);
+            const active = item.match(pathname);
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >

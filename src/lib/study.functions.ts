@@ -3,29 +3,55 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-const SUBJECTS = ["Math", "Science"] as const;
-const subjectSchema = z.enum(SUBJECTS);
+export const SUBJECTS = [
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "English",
+  "EVS",
+  "Social Studies",
+] as const;
+
+export const SOCIAL_BRANCHES = [
+  "History",
+  "Civics",
+  "Geography",
+  "Disaster Management",
+  "Road Safety Education",
+] as const;
+
+export const EXAM_TRACKS = ["JEE", "NEET", "CUET", "Olympiad", "NTSE", "Foundation"] as const;
+
+const subjectSchema = z.string().min(1).max(40);
 const gradeSchema = z.number().int().min(1).max(12);
+const sectionSchema = z.enum(["school", "ncert", "exam"]).default("school");
 
 function model() {
-  // dynamic import keeps server-only module out of client bundle
   return (async () => {
     const { createLovableAiGatewayProvider, getLovableApiKey } = await import("./ai-gateway.server");
     return createLovableAiGatewayProvider(getLovableApiKey())("google/gemini-3-flash-preview");
   })();
 }
 
+const TONE = `Explain like a friendly senior teaching an Indian Class 9-12 student. Use very simple words, short sentences, and bit-by-bit steps. Always give an example before the exercise. Use small markdown tables, ASCII diagrams, or emoji where helpful. Avoid jargon.`;
+
 // ------- Topic suggestions -------
 export const suggestTopics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ grade: gradeSchema, subject: subjectSchema }).parse(d),
+    z.object({
+      grade: gradeSchema,
+      subject: subjectSchema,
+      subSubject: z.string().optional(),
+    }).parse(d),
   )
   .handler(async ({ data }) => {
     const m = await model();
+    const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
     const { output } = await generateText({
       model: m,
-      prompt: `You are a curriculum planner for an Indian K-12 student in grade ${data.grade} studying ${data.subject}. Aligned to NCERT and useful for JEE/NEET prep when relevant. List 10 important chapter/topic names. Short (2-5 words), no numbering.`,
+      prompt: `List 10 important NCERT chapter/topic names for Class ${data.grade} Indian student studying ${focus}. Short names (2-5 words), no numbering.`,
       experimental_output: Output.object({
         schema: z.object({ topics: z.array(z.string()).min(6).max(12) }),
       }),
@@ -37,23 +63,43 @@ export const suggestTopics = createServerFn({ method: "POST" })
 export const startSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ grade: gradeSchema, subject: subjectSchema, topic: z.string().min(1).max(120) }).parse(d),
+    z.object({
+      grade: gradeSchema,
+      subject: subjectSchema,
+      topic: z.string().min(1).max(160),
+      subSubject: z.string().optional(),
+      section: sectionSchema.optional(),
+      examTrack: z.string().optional(),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const m = await model();
+    const section = data.section ?? "school";
+    const focus = data.subSubject ? `${data.subject} (${data.subSubject})` : data.subject;
+    const header =
+      section === "exam"
+        ? `Write a focused study note for an Indian Class ${data.grade} student preparing for ${data.examTrack ?? "competitive exam"} on "${data.topic}".`
+        : section === "ncert"
+        ? `Write a Class ${data.grade} NCERT chapter explainer for "${data.topic}" in ${focus}.`
+        : `Write a friendly study note for an Indian Class ${data.grade} student on "${data.topic}" in ${focus}.`;
+
     const { text } = await generateText({
       model: m,
-      prompt: `Write a clear, engaging study note for a grade ${data.grade} Indian student on the topic "${data.topic}" in ${data.subject}.
+      prompt: `${header}
 
-Format as Markdown with these sections:
-## Overview (2-3 sentences)
-## Key Concepts (bullets with bold terms)
-## Important Formulas / Definitions (in a list, use $$inline LaTeX$$ where helpful)
-## Worked Example (1-2 fully solved problems with steps)
-## Quick Tips for JEE/NEET (3 short tips)
+${TONE}
+
+Use this Markdown structure:
+## Easy Explanation (3-4 short sentences in simple words)
+## Key Points (bullets with **bold** key terms)
+## Important Formulas / Definitions (list, use $...$ or $$...$$ for math)
+## Diagram (simple ASCII / emoji / markdown table that shows the idea)
+## Solved Example (1-2 fully worked problems, step by step)
+## Important Questions with Answers (3 Q&A, short answers)
+## Quick Recap (3 bullets a student can revise in 30 seconds)
 ## Common Mistakes (3 bullets)
 
-Keep it accurate, NCERT-aligned, and concise (~600 words).`,
+Keep it accurate, NCERT-aligned, ~650 words.`,
     });
 
     const { data: row, error } = await context.supabase
@@ -64,6 +110,8 @@ Keep it accurate, NCERT-aligned, and concise (~600 words).`,
         subject: data.subject,
         topic: data.topic,
         lesson_md: text,
+        section,
+        sub_subject: data.subSubject ?? null,
       })
       .select("id")
       .single();
@@ -84,42 +132,64 @@ export const getSession = createServerFn({ method: "POST" })
     return row;
   });
 
+// ------- NCERT chapter list -------
+export const listNcertChapters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ grade: gradeSchema, subject: subjectSchema, subSubject: z.string().optional() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
+    const { output } = await generateText({
+      model: m,
+      prompt: `List the official NCERT textbook chapters for Class ${data.grade} ${focus} in order. Give each chapter's number and full title.`,
+      experimental_output: Output.object({
+        schema: z.object({
+          chapters: z.array(z.object({ number: z.number().int(), title: z.string() })).min(4).max(20),
+        }),
+      }),
+    });
+    return { chapters: output.chapters };
+  });
+
 // ------- Quiz generation -------
 const quizSchema = z.object({
-  questions: z
-    .array(
-      z.object({
-        q: z.string(),
-        choices: z.array(z.string()).length(4),
-        answer: z.number().int().min(0).max(3),
-        explanation: z.string(),
-      }),
-    )
-    .min(5)
-    .max(10),
+  questions: z.array(
+    z.object({
+      q: z.string(),
+      choices: z.array(z.string()).length(4),
+      answer: z.number().int().min(0).max(3),
+      explanation: z.string(),
+    }),
+  ).min(5).max(25),
 });
 export type Quiz = z.infer<typeof quizSchema>;
 
 export const generateQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z
-      .object({
-        sessionId: z.string().uuid().optional(),
-        grade: gradeSchema,
-        subject: subjectSchema,
-        topic: z.string().min(1).max(120),
-        count: z.number().int().min(5).max(10).default(5),
-        mode: z.enum(["practice", "timed", "weekly"]).default("practice"),
-      })
-      .parse(d),
+    z.object({
+      sessionId: z.string().uuid().optional(),
+      grade: gradeSchema,
+      subject: subjectSchema,
+      topic: z.string().min(1).max(160),
+      count: z.number().int().min(5).max(25).default(5),
+      mode: z.enum(["practice", "timed", "weekly", "exam", "series"]).default("practice"),
+      examTrack: z.string().optional(),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const m = await model();
+    const difficulty =
+      data.mode === "exam" || data.mode === "series"
+        ? `${data.examTrack ?? "competitive exam"} level`
+        : data.mode === "weekly"
+        ? "mixed (NCERT + tougher)"
+        : "NCERT level";
     const { output } = await generateText({
       model: m,
-      prompt: `Create ${data.count} multiple-choice questions for a grade ${data.grade} Indian student on "${data.topic}" in ${data.subject}.
-Difficulty: ${data.mode === "weekly" ? "mixed JEE/NEET level" : "NCERT + JEE/NEET style"}. Each question must have exactly 4 choices, one correct answer (0-indexed), and a 1-2 sentence explanation. Use clear, plain text (no LaTeX delimiters).`,
+      prompt: `Create ${data.count} multiple-choice questions for an Indian Class ${data.grade} student on "${data.topic}" in ${data.subject}. Difficulty: ${difficulty}. Exactly 4 choices each, one correct (0-indexed), 1-2 sentence explanation. Plain text, no LaTeX delimiters. Use simple language.`,
       experimental_output: Output.object({ schema: quizSchema }),
     });
 
@@ -134,6 +204,7 @@ Difficulty: ${data.mode === "weekly" ? "mixed JEE/NEET level" : "NCERT + JEE/NEE
         questions: output.questions,
         total: output.questions.length,
         mode: data.mode,
+        exam_track: data.examTrack ?? null,
       })
       .select("id")
       .single();
@@ -145,13 +216,11 @@ Difficulty: ${data.mode === "weekly" ? "mixed JEE/NEET level" : "NCERT + JEE/NEE
 export const submitQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z
-      .object({
-        attemptId: z.string().uuid(),
-        answers: z.array(z.number().int().min(0).max(3)),
-        timeTakenSeconds: z.number().int().min(0).max(36000),
-      })
-      .parse(d),
+    z.object({
+      attemptId: z.string().uuid(),
+      answers: z.array(z.number().int().min(0).max(3)),
+      timeTakenSeconds: z.number().int().min(0).max(36000),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { data: attempt, error } = await context.supabase
@@ -184,7 +253,6 @@ export const submitQuiz = createServerFn({ method: "POST" })
         .eq("id", attempt.session_id);
     }
 
-    // Update profile XP + streak
     const { data: profile } = await context.supabase
       .from("profiles")
       .select("total_xp, current_streak, last_active_date")
@@ -214,24 +282,32 @@ export const submitQuiz = createServerFn({ method: "POST" })
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [{ data: profile }, { data: sessions }, { data: attempts }] = await Promise.all([
-      context.supabase.from("profiles").select("*").eq("id", context.userId).single(),
-      context.supabase
-        .from("study_sessions")
-        .select("id, subject, topic, completed, created_at")
-        .eq("user_id", context.userId)
-        .order("created_at", { ascending: false })
-        .limit(20),
-      context.supabase
-        .from("quiz_attempts")
-        .select("subject, score, total, created_at")
-        .eq("user_id", context.userId)
-        .order("created_at", { ascending: false })
-        .limit(50),
-    ]);
+    const [{ data: profile }, { data: sessions }, { data: attempts }, { data: homework }] =
+      await Promise.all([
+        context.supabase.from("profiles").select("*").eq("id", context.userId).single(),
+        context.supabase
+          .from("study_sessions")
+          .select("id, subject, topic, completed, section, created_at")
+          .eq("user_id", context.userId)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        context.supabase
+          .from("quiz_attempts")
+          .select("subject, score, total, mode, exam_track, created_at")
+          .eq("user_id", context.userId)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        context.supabase
+          .from("homework_items")
+          .select("id, title, created_at")
+          .eq("user_id", context.userId)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
     return {
       profile,
       sessions: sessions ?? [],
       attempts: attempts ?? [],
+      homework: homework ?? [],
     };
   });
