@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      homework_items: {
+        Row: {
+          created_at: string
+          id: string
+          image_data_url: string
+          notes_md: string | null
+          questions: Json | null
+          solution_md: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_data_url: string
+          notes_md?: string | null
+          questions?: Json | null
+          solution_md?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_data_url?: string
+          notes_md?: string | null
+          questions?: Json | null
+          solution_md?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -51,6 +84,7 @@ export type Database = {
         Row: {
           answers: Json | null
           created_at: string
+          exam_track: string | null
           grade: number
           id: string
           mode: string
@@ -66,6 +100,7 @@ export type Database = {
         Insert: {
           answers?: Json | null
           created_at?: string
+          exam_track?: string | null
           grade: number
           id?: string
           mode?: string
@@ -81,6 +116,7 @@ export type Database = {
         Update: {
           answers?: Json | null
           created_at?: string
+          exam_track?: string | null
           grade?: number
           id?: string
           mode?: string
@@ -110,6 +146,8 @@ export type Database = {
           grade: number
           id: string
           lesson_md: string | null
+          section: string
+          sub_subject: string | null
           subject: string
           topic: string
           updated_at: string
@@ -122,6 +160,8 @@ export type Database = {
           grade: number
           id?: string
           lesson_md?: string | null
+          section?: string
+          sub_subject?: string | null
           subject: string
           topic: string
           updated_at?: string
@@ -134,6 +174,8 @@ export type Database = {
           grade?: number
           id?: string
           lesson_md?: string | null
+          section?: string
+          sub_subject?: string | null
           subject?: string
           topic?: string
           updated_at?: string
