@@ -32,7 +32,7 @@ function SessionPage() {
     queryFn: () => getS({ data: { sessionId } }),
   });
   const session = sessionQ.data;
-  const SubjectIcon = session?.subject === "Math" ? Calculator : FlaskConical;
+  const SubjectIcon = /math/i.test(session?.subject ?? "") ? Calculator : FlaskConical;
 
   const [tab, setTab] = useState("lesson");
   const [quizMode, setQuizMode] = useState<"practice" | "timed" | "weekly">("practice");
@@ -48,7 +48,7 @@ function SessionPage() {
         data: {
           sessionId,
           grade: session.grade,
-          subject: session.subject as "Math" | "Science",
+          subject: session.subject,
           topic: session.topic,
           count: mode === "weekly" ? 10 : 5,
           mode,
@@ -116,7 +116,7 @@ function SessionPage() {
             className="size-10 rounded-xl grid place-items-center text-white shrink-0"
             style={{
               backgroundColor:
-                session.subject === "Math" ? "var(--color-math)" : "var(--color-science)",
+                /math/i.test(session.subject) ? "var(--color-math)" : "var(--color-science)",
             }}
           >
             <SubjectIcon className="size-5" />
