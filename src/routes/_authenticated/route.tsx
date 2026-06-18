@@ -62,8 +62,9 @@ function AuthedLayout() {
               <GraduationCap className="size-3.5" />
               {profile?.total_xp ?? 0} XP
             </div>
-            <Link to="/about" className="hidden sm:inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition px-2">
-              About
+            <Link to="/about" className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition px-2">
+              <span className="hidden sm:inline">About</span>
+              <Info className="size-4 sm:hidden" />
             </Link>
             <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
               <LogOut className="size-4" />
