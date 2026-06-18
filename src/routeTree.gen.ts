@@ -18,6 +18,7 @@ import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedNcertRouteImport } from './routes/_authenticated/ncert'
 import { Route as AuthenticatedHomeworkRouteImport } from './routes/_authenticated/homework'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
+import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated/about'
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor.index'
 import { Route as AuthenticatedTutorThreadIdRouteImport } from './routes/_authenticated/tutor.$threadId'
 import { Route as AuthenticatedLearnSessionIdRouteImport } from './routes/_authenticated/learn.$sessionId'
@@ -66,6 +67,11 @@ const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTutorIndexRoute = AuthenticatedTutorIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -87,6 +93,7 @@ const AuthenticatedLearnSessionIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/about': typeof AuthenticatedAboutRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/homework': typeof AuthenticatedHomeworkRoute
   '/ncert': typeof AuthenticatedNcertRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/about': typeof AuthenticatedAboutRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/homework': typeof AuthenticatedHomeworkRoute
   '/ncert': typeof AuthenticatedNcertRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/about': typeof AuthenticatedAboutRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/homework': typeof AuthenticatedHomeworkRoute
   '/_authenticated/ncert': typeof AuthenticatedNcertRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/about'
     | '/exams'
     | '/homework'
     | '/ncert'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/about'
     | '/exams'
     | '/homework'
     | '/ncert'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/about'
     | '/_authenticated/exams'
     | '/_authenticated/homework'
     | '/_authenticated/ncert'
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/about': {
+      id: '/_authenticated/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AuthenticatedAboutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/': {
       id: '/_authenticated/tutor/'
       path: '/'
@@ -275,6 +294,7 @@ const AuthenticatedTutorRouteWithChildren =
   AuthenticatedTutorRoute._addFileChildren(AuthenticatedTutorRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAboutRoute: typeof AuthenticatedAboutRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedHomeworkRoute: typeof AuthenticatedHomeworkRoute
   AuthenticatedNcertRoute: typeof AuthenticatedNcertRoute
@@ -285,6 +305,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAboutRoute: AuthenticatedAboutRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedHomeworkRoute: AuthenticatedHomeworkRoute,
   AuthenticatedNcertRoute: AuthenticatedNcertRoute,
