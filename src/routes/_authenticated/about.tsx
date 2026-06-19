@@ -100,15 +100,16 @@ function AboutPage() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold tracking-tight">Founder & Builder</h2>
         <Card className="p-6 rounded-2xl border border-border/80 flex flex-col items-center text-center gap-4">
-          <div className="relative">
+          <div className="size-36 rounded-full overflow-hidden border-4 border-primary/30 shadow-md bg-primary/5 grid place-items-center">
             <img
               src={founderAsset.url}
-              alt="Founder portrait"
-              className="size-28 rounded-full object-cover border-4 border-primary/20 shadow-sm"
+              alt="Imtiaz Ahmed — Founder of StudyGenie"
+              className="w-full h-full object-cover object-center"
+              style={{ objectPosition: "center 20%" }}
             />
           </div>
           <div className="space-y-1">
-            <p className="text-lg font-semibold text-foreground">Your Name</p>
+            <p className="text-lg font-semibold text-foreground">Imtiaz Ahmed</p>
             <p className="text-sm font-medium text-primary">Founder & Builder</p>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto pt-1">
               Built with passion for students and simple learning.
