@@ -412,3 +412,176 @@ export const getDashboard = createServerFn({ method: "GET" })
       homework: homework ?? [],
     };
   });
+
+// ============ NCERT Textbook Exercises ============
+
+const chapterSchema = z.string().min(1).max(200);
+
+
+
+
+export const listChapterExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ grade: gradeSchema, subject: subjectSchema, chapter: chapterSchema }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const fallback = [
+      { name: "Exercise 1", questionCount: 8 },
+      { name: "Miscellaneous Exercise", questionCount: 6 },
+    ];
+    try {
+      const { text } = await generateText({
+        model: m,
+        prompt: `Return ONLY a JSON array (no markdown) of the textbook exercise sections inside NCERT Class ${data.grade} ${data.subject}, "${data.chapter}", in order. Always include a final item named "Miscellaneous Exercise" if the chapter has one. Each item: {"name":"Exercise 1.1","questionCount":10}. Example: [{"name":"Exercise 1.1","questionCount":8},{"name":"Miscellaneous Exercise","questionCount":12}]`,
+      });
+      const arr = safeJsonArray(text) ?? [];
+      const exercises = arr
+        .map((it: any) => ({
+          name: String(it?.name ?? "").trim(),
+          questionCount: Math.min(30, Math.max(1, Number(it?.questionCount) || 6)),
+        }))
+        .filter((x) => x.name)
+        .slice(0, 15);
+      if (exercises.length < 1) return { exercises: fallback };
+      const hasMisc = exercises.some((e) => /misc/i.test(e.name));
+      if (!hasMisc) exercises.push({ name: "Miscellaneous Exercise", questionCount: 6 });
+      return { exercises };
+    } catch {
+      return { exercises: fallback };
+    }
+  });
+
+export const getExerciseQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      grade: gradeSchema,
+      subject: subjectSchema,
+      chapter: chapterSchema,
+      exercise: z.string().min(1).max(80),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const m = await model();
+    const isMisc = /misc/i.test(data.exercise);
+    let questions: { question: string; hint: string }[] = [];
+    try {
+      const { text } = await generateText({
+        model: m,
+        prompt: `Return ONLY a JSON array (no markdown) of the textbook questions from NCERT Class ${data.grade} ${data.subject}, chapter "${data.chapter}", section "${data.exercise}"${isMisc ? " (the miscellaneous exercise — usually mixed/advanced questions)" : ""}. Use the actual textbook questions when known; otherwise create faithful NCERT-style questions. Each item: {"question":"Full question text","hint":"One short hint"}. 6 to 12 items. Plain text only (no LaTeX delimiters).`,
+      });
+      const arr = safeJsonArray(text) ?? [];
+      questions = arr
+        .map((it: any) => ({
+          question: String(it?.question ?? it?.q ?? "").trim(),
+          hint: String(it?.hint ?? "").trim() || "Recall the key idea from the chapter.",
+        }))
+        .filter((x) => x.question)
+        .slice(0, 12);
+    } catch {
+      questions = [];
+    }
+    if (questions.length === 0) {
+      questions = Array.from({ length: 6 }, (_, i) => ({
+        question: `Question ${i + 1} from ${data.exercise} of "${data.chapter}".`,
+        hint: "Refer to the chapter's key concepts.",
+      }));
+    }
+
+    // Load completion progress for this exercise
+    const { data: prog } = await context.supabase
+      .from("exercise_progress")
+      .select("question_index")
+      .eq("user_id", context.userId)
+      .eq("grade", data.grade)
+      .eq("subject", data.subject)
+      .eq("chapter", data.chapter)
+      .eq("exercise", data.exercise);
+    const completed = new Set((prog ?? []).map((r: any) => r.question_index));
+    return { questions, completed: Array.from(completed) as number[] };
+  });
+
+export const getExerciseSolution = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      grade: gradeSchema,
+      subject: subjectSchema,
+      chapter: chapterSchema,
+      question: z.string().min(1).max(2000),
+      kind: z.enum(["solution", "explain", "similar"]),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const prompt =
+      data.kind === "solution"
+        ? `Give a clean step-by-step solution to this NCERT Class ${data.grade} ${data.subject} ("${data.chapter}") question.\n\nQUESTION: ${data.question}\n\n${TONE}\n\nUse markdown with these headings:\n## Final Answer\n## Step-by-step Solution\n## Why this works\nKeep math in $...$ where needed. Be precise.`
+        : data.kind === "explain"
+        ? `Explain in the simplest possible Indian student English how to think about this question. Use a real-life example if useful.\n\nQUESTION: ${data.question}\n\n${TONE}\n\nUse markdown:\n## What is being asked\n## Easy intuition (with example)\n## How to solve it\n## Key formula / concept`
+        : `Create ONE similar practice question (same difficulty, same concept, different numbers/context) plus a full step-by-step answer.\n\nORIGINAL: ${data.question}\n\n${TONE}\n\nUse markdown:\n## Similar Question\n## Step-by-step Answer\n## Final Answer`;
+    const { text } = await generateText({ model: m, prompt });
+    return { content: text };
+  });
+
+export const markExerciseQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      grade: gradeSchema,
+      subject: subjectSchema,
+      chapter: chapterSchema,
+      exercise: z.string().min(1).max(80),
+      questionIndex: z.number().int().min(0).max(50),
+      completed: z.boolean(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (data.completed) {
+      await context.supabase.from("exercise_progress").upsert(
+        {
+          user_id: context.userId,
+          grade: data.grade,
+          subject: data.subject,
+          chapter: data.chapter,
+          exercise: data.exercise,
+          question_index: data.questionIndex,
+        },
+        { onConflict: "user_id,grade,subject,chapter,exercise,question_index" },
+      );
+    } else {
+      await context.supabase
+        .from("exercise_progress")
+        .delete()
+        .eq("user_id", context.userId)
+        .eq("grade", data.grade)
+        .eq("subject", data.subject)
+        .eq("chapter", data.chapter)
+        .eq("exercise", data.exercise)
+        .eq("question_index", data.questionIndex);
+    }
+    return { ok: true };
+  });
+
+export const getChapterExerciseProgress = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ grade: gradeSchema, subject: subjectSchema, chapter: chapterSchema }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await context.supabase
+      .from("exercise_progress")
+      .select("exercise, question_index")
+      .eq("user_id", context.userId)
+      .eq("grade", data.grade)
+      .eq("subject", data.subject)
+      .eq("chapter", data.chapter);
+    const byExercise: Record<string, number> = {};
+    for (const r of rows ?? []) {
+      byExercise[(r as any).exercise] = (byExercise[(r as any).exercise] ?? 0) + 1;
+    }
+    return { byExercise };
+  });
+

@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listNcertChapters, startSession, SUBJECTS } from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
-import { Loader2, Library, ChevronRight } from "lucide-react";
+import { Loader2, Library, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ncert")({
@@ -96,24 +96,40 @@ function NcertPage() {
         ) : (
           <div className="space-y-2">
             {chaptersQ.data?.chapters.map((c) => (
-              <button
-                key={`${c.number}-${c.title}`}
-                disabled={startMut.isPending}
-                onClick={() => startMut.mutate(`Chapter ${c.number}: ${c.title}`)}
-                className="w-full text-left disabled:opacity-50"
-              >
-                <Card className="p-3.5 flex items-center gap-3 hover:border-primary/50 transition">
+              <Card key={`${c.number}-${c.title}`} className="p-3.5 space-y-3">
+                <div className="flex items-center gap-3">
                   <div className="size-9 rounded-lg bg-secondary text-foreground/70 grid place-items-center text-sm font-bold shrink-0">
                     {c.number}
                   </div>
                   <p className="flex-1 font-medium text-sm">{c.title}</p>
-                  {startMut.isPending ? (
-                    <Loader2 className="size-4 animate-spin text-primary shrink-0" />
-                  ) : (
-                    <ChevronRight className="size-4 text-muted-foreground shrink-0" />
-                  )}
-                </Card>
-              </button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    disabled={startMut.isPending}
+                    onClick={() => startMut.mutate(`Chapter ${c.number}: ${c.title}`)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50 hover:opacity-90 transition"
+                  >
+                    {startMut.isPending ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="size-3.5" />
+                    )}
+                    Learn
+                  </button>
+                  <Link
+                    to="/exercises"
+                    search={{
+                      grade,
+                      subject,
+                      chapter: `Chapter ${c.number}: ${c.title}`,
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition border border-border"
+                  >
+                    <BookOpen className="size-3.5" />
+                    Exercises
+                  </Link>
+                </div>
+              </Card>
             ))}
           </div>
         )}
