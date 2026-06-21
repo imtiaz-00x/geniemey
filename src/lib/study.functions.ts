@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 
 export const SUBJECTS = [
@@ -49,14 +49,20 @@ export const suggestTopics = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { text } = await generateText({
-      model: m,
-      prompt: `Return ONLY a JSON array (no markdown, no prose) of 10 important NCERT chapter/topic names (short, 2-5 words) for Class ${data.grade} Indian student studying ${focus}. Example: ["Topic one","Topic two"]`,
-    });
-    const parsed = safeJsonArray(text);
-    const topics = (parsed ?? []).map((t) => String(t)).filter(Boolean).slice(0, 12);
+    const fallbackTopics = [`Introduction to ${focus}`, `Key concepts of ${focus}`, `Important formulas in ${focus}`, `Practice problems for ${focus}`, `Revision: ${focus}`];
+    let topics: string[] = [];
+    try {
+      const { text } = await generateText({
+        model: m,
+        prompt: `Return ONLY a JSON array (no markdown, no prose) of 10 important NCERT chapter/topic names (short, 2-5 words) for Class ${data.grade} Indian student studying ${focus}. Example: ["Topic one","Topic two"]`,
+      });
+      const parsed = safeJsonArray(text);
+      topics = (parsed ?? []).map((t) => String(t)).filter(Boolean).slice(0, 12);
+    } catch {
+      topics = fallbackTopics;
+    }
     if (topics.length < 4) {
-      return { topics: [`Introduction to ${focus}`, `Key concepts of ${focus}`, `Important formulas in ${focus}`, `Practice problems for ${focus}`, `Revision: ${focus}`] };
+      return { topics: fallbackTopics };
     }
     return { topics };
   });
@@ -151,11 +157,17 @@ export const listNcertChapters = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { text } = await generateText({
-      model: m,
-      prompt: `Return ONLY a JSON array (no markdown, no prose) of official NCERT textbook chapters for Class ${data.grade} ${focus}, in order. Each item: {"number":1,"title":"Chapter title"}. Example: [{"number":1,"title":"Number Systems"}]`,
-    });
-    const arr = safeJsonArray(text) ?? [];
+    const fallbackChapters = Array.from({ length: 6 }, (_, i) => ({ number: i + 1, title: `${focus} — Chapter ${i + 1}` }));
+    let arr: unknown[] = [];
+    try {
+      const { text } = await generateText({
+        model: m,
+        prompt: `Return ONLY a JSON array (no markdown, no prose) of official NCERT textbook chapters for Class ${data.grade} ${focus}, in order. Each item: {"number":1,"title":"Chapter title"}. Example: [{"number":1,"title":"Number Systems"}]`,
+      });
+      arr = safeJsonArray(text) ?? [];
+    } catch {
+      return { chapters: fallbackChapters };
+    }
     const chapters = arr
       .map((it: any, i: number) => ({
         number: Number.isInteger(Number(it?.number)) ? Number(it.number) : i + 1,
@@ -164,7 +176,7 @@ export const listNcertChapters = createServerFn({ method: "POST" })
       .filter((c) => c.title)
       .slice(0, 20);
     if (chapters.length < 3) {
-      return { chapters: Array.from({ length: 6 }, (_, i) => ({ number: i + 1, title: `${focus} — Chapter ${i + 1}` })) };
+      return { chapters: fallbackChapters };
     }
     return { chapters };
   });
