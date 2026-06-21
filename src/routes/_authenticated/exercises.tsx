@@ -315,7 +315,7 @@ function ExerciseDetail({
                 )}
                 {showHint && solveMut.data && !solveMut.isPending && (
                   <div className="rounded-lg border border-border bg-card p-3">
-                    <StudyMarkdown content={solveMut.data.content} />
+                    <StudyMarkdown>{solveMut.data.content}</StudyMarkdown>
                   </div>
                 )}
               </Card>
