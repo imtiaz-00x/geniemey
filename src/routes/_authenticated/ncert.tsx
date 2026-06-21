@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listNcertChapters, startSession, SUBJECTS } from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
-import { Loader2, Library, ChevronRight } from "lucide-react";
+import { Loader2, Library, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ncert")({
