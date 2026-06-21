@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercise_progress: {
+        Row: {
+          chapter: string
+          completed_at: string
+          exercise: string
+          grade: number
+          id: string
+          question_index: number
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          chapter: string
+          completed_at?: string
+          exercise: string
+          grade: number
+          id?: string
+          question_index: number
+          subject: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string
+          completed_at?: string
+          exercise?: string
+          grade?: number
+          id?: string
+          question_index?: number
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       homework_items: {
         Row: {
           created_at: string
