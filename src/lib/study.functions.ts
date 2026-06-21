@@ -49,15 +49,25 @@ export const suggestTopics = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: m,
-      prompt: `List 10 important NCERT chapter/topic names for Class ${data.grade} Indian student studying ${focus}. Short names (2-5 words), no numbering.`,
-      experimental_output: Output.object({
-        schema: z.object({ topics: z.array(z.string()).min(6).max(12) }),
-      }),
+      prompt: `Return ONLY a JSON array (no markdown, no prose) of 10 important NCERT chapter/topic names (short, 2-5 words) for Class ${data.grade} Indian student studying ${focus}. Example: ["Topic one","Topic two"]`,
     });
-    return { topics: output.topics };
+    const parsed = safeJsonArray(text);
+    const topics = (parsed ?? []).map((t) => String(t)).filter(Boolean).slice(0, 12);
+    if (topics.length < 4) {
+      return { topics: [`Introduction to ${focus}`, `Key concepts of ${focus}`, `Important formulas in ${focus}`, `Practice problems for ${focus}`, `Revision: ${focus}`] };
+    }
+    return { topics };
   });
+
+function safeJsonArray(raw: string): unknown[] | null {
+  let s = (raw ?? "").trim().replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const a = s.indexOf("["); const b = s.lastIndexOf("]");
+  if (a < 0 || b < 0) return null;
+  s = s.slice(a, b + 1).replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, " ");
+  try { const p = JSON.parse(s); return Array.isArray(p) ? p : null; } catch { return null; }
+}
 
 // ------- Create session + lesson -------
 export const startSession = createServerFn({ method: "POST" })
@@ -141,16 +151,22 @@ export const listNcertChapters = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: m,
-      prompt: `List the official NCERT textbook chapters for Class ${data.grade} ${focus} in order. Give each chapter's number and full title.`,
-      experimental_output: Output.object({
-        schema: z.object({
-          chapters: z.array(z.object({ number: z.number().int(), title: z.string() })).min(4).max(20),
-        }),
-      }),
+      prompt: `Return ONLY a JSON array (no markdown, no prose) of official NCERT textbook chapters for Class ${data.grade} ${focus}, in order. Each item: {"number":1,"title":"Chapter title"}. Example: [{"number":1,"title":"Number Systems"}]`,
     });
-    return { chapters: output.chapters };
+    const arr = safeJsonArray(text) ?? [];
+    const chapters = arr
+      .map((it: any, i: number) => ({
+        number: Number.isInteger(Number(it?.number)) ? Number(it.number) : i + 1,
+        title: String(it?.title ?? "").trim(),
+      }))
+      .filter((c) => c.title)
+      .slice(0, 20);
+    if (chapters.length < 3) {
+      return { chapters: Array.from({ length: 6 }, (_, i) => ({ number: i + 1, title: `${focus} — Chapter ${i + 1}` })) };
+    }
+    return { chapters };
   });
 
 // ------- Quiz generation -------
