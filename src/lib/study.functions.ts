@@ -417,13 +417,8 @@ export const getDashboard = createServerFn({ method: "GET" })
 
 const chapterSchema = z.string().min(1).max(200);
 
-function safeJsonObject(raw: string): any | null {
-  let s = (raw ?? "").trim().replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-  const a = s.indexOf("{"); const b = s.lastIndexOf("}");
-  if (a < 0 || b < 0) return null;
-  s = s.slice(a, b + 1).replace(/,\s*([}\]])/g, "$1").replace(/[\x00-\x1F\x7F]/g, " ");
-  try { return JSON.parse(s); } catch { return null; }
-}
+
+
 
 export const listChapterExercises = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
