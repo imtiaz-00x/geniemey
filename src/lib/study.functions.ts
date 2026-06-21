@@ -49,15 +49,25 @@ export const suggestTopics = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: m,
-      prompt: `List 10 important NCERT chapter/topic names for Class ${data.grade} Indian student studying ${focus}. Short names (2-5 words), no numbering.`,
-      experimental_output: Output.object({
-        schema: z.object({ topics: z.array(z.string()).min(6).max(12) }),
-      }),
+      prompt: `Return ONLY a JSON array (no markdown, no prose) of 10 important NCERT chapter/topic names (short, 2-5 words) for Class ${data.grade} Indian student studying ${focus}. Example: ["Topic one","Topic two"]`,
     });
-    return { topics: output.topics };
+    const parsed = safeJsonArray(text);
+    const topics = (parsed ?? []).map((t) => String(t)).filter(Boolean).slice(0, 12);
+    if (topics.length < 4) {
+      return { topics: [`Introduction to ${focus}`, `Key concepts of ${focus}`, `Important formulas in ${focus}`, `Practice problems for ${focus}`, `Revision: ${focus}`] };
+    }
+    return { topics };
   });
+
+function safeJsonArray(raw: string): unknown[] | null {
+  let s = (raw ?? "").trim().replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const a = s.indexOf("["); const b = s.lastIndexOf("]");
+  if (a < 0 || b < 0) return null;
+  s = s.slice(a, b + 1).replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, " ");
+  try { const p = JSON.parse(s); return Array.isArray(p) ? p : null; } catch { return null; }
+}
 
 // ------- Create session + lesson -------
 export const startSession = createServerFn({ method: "POST" })
