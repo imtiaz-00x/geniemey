@@ -151,16 +151,22 @@ export const listNcertChapters = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const focus = data.subSubject ? `${data.subject} → ${data.subSubject}` : data.subject;
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: m,
-      prompt: `List the official NCERT textbook chapters for Class ${data.grade} ${focus} in order. Give each chapter's number and full title.`,
-      experimental_output: Output.object({
-        schema: z.object({
-          chapters: z.array(z.object({ number: z.number().int(), title: z.string() })).min(4).max(20),
-        }),
-      }),
+      prompt: `Return ONLY a JSON array (no markdown, no prose) of official NCERT textbook chapters for Class ${data.grade} ${focus}, in order. Each item: {"number":1,"title":"Chapter title"}. Example: [{"number":1,"title":"Number Systems"}]`,
     });
-    return { chapters: output.chapters };
+    const arr = safeJsonArray(text) ?? [];
+    const chapters = arr
+      .map((it: any, i: number) => ({
+        number: Number.isInteger(Number(it?.number)) ? Number(it.number) : i + 1,
+        title: String(it?.title ?? "").trim(),
+      }))
+      .filter((c) => c.title)
+      .slice(0, 20);
+    if (chapters.length < 3) {
+      return { chapters: Array.from({ length: 6 }, (_, i) => ({ number: i + 1, title: `${focus} — Chapter ${i + 1}` })) };
+    }
+    return { chapters };
   });
 
 // ------- Quiz generation -------
