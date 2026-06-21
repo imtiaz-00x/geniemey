@@ -166,6 +166,67 @@ const quizSchema = z.object({
 });
 export type Quiz = z.infer<typeof quizSchema>;
 
+function extractQuizJson(raw: string, count: number): Quiz["questions"] | null {
+  let s = (raw ?? "").trim();
+  s = s.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = s.search(/[\[{]/);
+  const openChar = start >= 0 ? s[start] : "";
+  const endChar = openChar === "[" ? "]" : "}";
+  const end = s.lastIndexOf(endChar);
+  if (start < 0 || end < 0) return null;
+  s = s.slice(start, end + 1).replace(/,\s*([}\]])/g, "$1").replace(/[\x00-\x1F\x7F]/g, " ");
+  let parsed: any;
+  try { parsed = JSON.parse(s); } catch { return null; }
+  const arr = Array.isArray(parsed) ? parsed : parsed?.questions;
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  const out: Quiz["questions"] = [];
+  for (const it of arr) {
+    if (!it || typeof it !== "object") continue;
+    const q = String(it.question ?? it.q ?? "").trim();
+    const options = it.options ?? it.choices;
+    const ans = it.correctAnswer ?? it.answer;
+    const expl = String(it.explanation ?? "").trim() || "—";
+    if (!q || !Array.isArray(options) || options.length !== 4) continue;
+    const choices = options.map((o: unknown) => String(o));
+    const a = Number(ans);
+    if (!Number.isInteger(a) || a < 0 || a > 3) continue;
+    out.push({ q, choices, answer: a, explanation: expl });
+  }
+  if (out.length === 0) return null;
+  return out.slice(0, count);
+}
+
+function fallbackQuiz(topic: string, subject: string, count: number): Quiz["questions"] {
+  const items: Quiz["questions"] = [];
+  for (let i = 1; i <= count; i++) {
+    items.push({
+      q: `Quick check ${i}: Which statement best describes a key idea of "${topic}" in ${subject}?`,
+      choices: [
+        `It is a core concept of ${topic}.`,
+        `It is unrelated to ${subject}.`,
+        `It only applies outside ${subject}.`,
+        `It has no definition.`,
+      ],
+      answer: 0,
+      explanation: `Review the chapter "${topic}" — option 1 reflects its main idea.`,
+    });
+  }
+  return items;
+}
+
+async function tryGenerateQuestions(
+  prompt: string,
+  count: number,
+): Promise<Quiz["questions"] | null> {
+  const m = await model();
+  try {
+    const { text } = await generateText({ model: m, prompt });
+    return extractQuizJson(text, count);
+  } catch {
+    return null;
+  }
+}
+
 export const generateQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -180,18 +241,30 @@ export const generateQuiz = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const m = await model();
     const difficulty =
       data.mode === "exam" || data.mode === "series"
         ? `${data.examTrack ?? "competitive exam"} level`
         : data.mode === "weekly"
         ? "mixed (NCERT + tougher)"
         : "NCERT level";
-    const { output } = await generateText({
-      model: m,
-      prompt: `Create ${data.count} multiple-choice questions for an Indian Class ${data.grade} student on "${data.topic}" in ${data.subject}. Difficulty: ${difficulty}. Exactly 4 choices each, one correct (0-indexed), 1-2 sentence explanation. Plain text, no LaTeX delimiters. Use simple language.`,
-      experimental_output: Output.object({ schema: quizSchema }),
-    });
+
+    const basePrompt = `You are a quiz generator. Return ONLY valid JSON (no markdown, no code fences, no commentary, no prose).
+Create ${data.count} multiple-choice questions for an Indian Class ${data.grade} student on "${data.topic}" in ${data.subject}. Difficulty: ${difficulty}.
+Use simple student language. Plain text only (no LaTeX delimiters like $ or $$).
+Exactly this JSON shape:
+{"title":"Quiz","questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"short"}]}
+Rules: exactly 4 options per question, correctAnswer is the 0-indexed integer of the right option, explanation is 1-2 short sentences. Output ONLY the JSON object.`;
+
+    let questions = await tryGenerateQuestions(basePrompt, data.count);
+    if (!questions) {
+      questions = await tryGenerateQuestions(
+        basePrompt + "\n\nIMPORTANT: Your previous attempt was invalid. Return ONLY the JSON object now.",
+        data.count,
+      );
+    }
+    if (!questions) {
+      questions = fallbackQuiz(data.topic, data.subject, data.count);
+    }
 
     const { data: row, error } = await context.supabase
       .from("quiz_attempts")
@@ -201,15 +274,15 @@ export const generateQuiz = createServerFn({ method: "POST" })
         grade: data.grade,
         subject: data.subject,
         topic: data.topic,
-        questions: output.questions,
-        total: output.questions.length,
+        questions,
+        total: questions.length,
         mode: data.mode,
         exam_track: data.examTrack ?? null,
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    return { attemptId: row.id, questions: output.questions };
+    return { attemptId: row.id, questions };
   });
 
 // ------- Grade quiz -------
