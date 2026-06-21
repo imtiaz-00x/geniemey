@@ -17,6 +17,7 @@ import { Route as AuthenticatedTutorRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedNcertRouteImport } from './routes/_authenticated/ncert'
 import { Route as AuthenticatedHomeworkRouteImport } from './routes/_authenticated/homework'
+import { Route as AuthenticatedExercisesRouteImport } from './routes/_authenticated/exercises'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated/about'
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor.index'
@@ -62,6 +63,11 @@ const AuthenticatedHomeworkRoute = AuthenticatedHomeworkRouteImport.update({
   path: '/homework',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExercisesRoute = AuthenticatedExercisesRouteImport.update({
+  id: '/exercises',
+  path: '/exercises',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/about': typeof AuthenticatedAboutRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/exercises': typeof AuthenticatedExercisesRoute
   '/homework': typeof AuthenticatedHomeworkRoute
   '/ncert': typeof AuthenticatedNcertRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/about': typeof AuthenticatedAboutRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/exercises': typeof AuthenticatedExercisesRoute
   '/homework': typeof AuthenticatedHomeworkRoute
   '/ncert': typeof AuthenticatedNcertRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/about': typeof AuthenticatedAboutRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
+  '/_authenticated/exercises': typeof AuthenticatedExercisesRoute
   '/_authenticated/homework': typeof AuthenticatedHomeworkRoute
   '/_authenticated/ncert': typeof AuthenticatedNcertRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/about'
     | '/exams'
+    | '/exercises'
     | '/homework'
     | '/ncert'
     | '/progress'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/about'
     | '/exams'
+    | '/exercises'
     | '/homework'
     | '/ncert'
     | '/progress'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/about'
     | '/_authenticated/exams'
+    | '/_authenticated/exercises'
     | '/_authenticated/homework'
     | '/_authenticated/ncert'
     | '/_authenticated/progress'
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeworkRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exercises': {
+      id: '/_authenticated/exercises'
+      path: '/exercises'
+      fullPath: '/exercises'
+      preLoaderRoute: typeof AuthenticatedExercisesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exams': {
       id: '/_authenticated/exams'
       path: '/exams'
@@ -296,6 +315,7 @@ const AuthenticatedTutorRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAboutRoute: typeof AuthenticatedAboutRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
+  AuthenticatedExercisesRoute: typeof AuthenticatedExercisesRoute
   AuthenticatedHomeworkRoute: typeof AuthenticatedHomeworkRoute
   AuthenticatedNcertRoute: typeof AuthenticatedNcertRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
@@ -307,6 +327,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAboutRoute: AuthenticatedAboutRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
+  AuthenticatedExercisesRoute: AuthenticatedExercisesRoute,
   AuthenticatedHomeworkRoute: AuthenticatedHomeworkRoute,
   AuthenticatedNcertRoute: AuthenticatedNcertRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
