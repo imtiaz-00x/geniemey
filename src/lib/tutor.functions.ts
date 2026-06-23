@@ -94,3 +94,66 @@ export const loadThreadMessages = createServerFn({ method: "POST" })
     }));
     return { thread, messages };
   });
+
+export const deleteMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("tutor_messages")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateMessageText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), text: z.string().min(1).max(8000) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("tutor_messages")
+      .update({ parts: [{ type: "text", text: data.text }] })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteFromMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error: rErr } = await context.supabase
+      .from("tutor_messages")
+      .select("thread_id, created_at")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (rErr) throw new Error(rErr.message);
+    if (!row) return { ok: true };
+    const { error } = await context.supabase
+      .from("tutor_messages")
+      .delete()
+      .eq("thread_id", row.thread_id)
+      .eq("user_id", context.userId)
+      .gt("created_at", row.created_at);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const clearThreadMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ threadId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("tutor_messages")
+      .delete()
+      .eq("thread_id", data.threadId)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
