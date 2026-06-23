@@ -68,19 +68,20 @@ export const Route = createFileRoute("/api/chat")({
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
             try {
-              // Persist only the new ones (last user + new assistant)
               const last = finalMessages[finalMessages.length - 1];
               const prevUser = finalMessages[finalMessages.length - 2];
-              const rows = [prevUser, last]
-                .filter((m): m is UIMessage => !!m)
-                .map((m) => ({
-                  thread_id: threadId,
-                  user_id: userId,
-                  role: m.role,
-                  parts: m.parts as unknown as object,
-                }));
+              const toInsert =
+                persistMode === "assistantOnly"
+                  ? [last].filter((m): m is UIMessage => !!m && m.role === "assistant")
+                  : [prevUser, last].filter((m): m is UIMessage => !!m);
+              const rows = toInsert.map((m) => ({
+                thread_id: threadId,
+                user_id: userId,
+                role: m.role,
+                parts: m.parts as unknown as object,
+              }));
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await supabase.from("tutor_messages").insert(rows as any);
+              if (rows.length) await supabase.from("tutor_messages").insert(rows as any);
 
               // Auto-title from first user message
               if (thread.title === "New chat") {
