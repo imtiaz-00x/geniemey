@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/chat")({
         const token = authHeader.replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Unauthorized", { status: 401 });
 
-        const { messages, threadId } = (await request.json()) as Body;
+        const { messages, threadId, persistMode = "append" } = (await request.json()) as Body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages and threadId required", { status: 400 });
         }
