@@ -3,7 +3,7 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-type Body = { messages?: UIMessage[]; threadId?: string };
+type Body = { messages?: UIMessage[]; threadId?: string; persistMode?: "append" | "assistantOnly" };
 
 export const Route = createFileRoute("/api/chat")({
   server: {
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/chat")({
         const token = authHeader.replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Unauthorized", { status: 401 });
 
-        const { messages, threadId } = (await request.json()) as Body;
+        const { messages, threadId, persistMode = "append" } = (await request.json()) as Body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages and threadId required", { status: 400 });
         }
@@ -68,19 +68,20 @@ export const Route = createFileRoute("/api/chat")({
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
             try {
-              // Persist only the new ones (last user + new assistant)
               const last = finalMessages[finalMessages.length - 1];
               const prevUser = finalMessages[finalMessages.length - 2];
-              const rows = [prevUser, last]
-                .filter((m): m is UIMessage => !!m)
-                .map((m) => ({
-                  thread_id: threadId,
-                  user_id: userId,
-                  role: m.role,
-                  parts: m.parts as unknown as object,
-                }));
+              const toInsert =
+                persistMode === "assistantOnly"
+                  ? [last].filter((m): m is UIMessage => !!m && m.role === "assistant")
+                  : [prevUser, last].filter((m): m is UIMessage => !!m);
+              const rows = toInsert.map((m) => ({
+                thread_id: threadId,
+                user_id: userId,
+                role: m.role,
+                parts: m.parts as unknown as object,
+              }));
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await supabase.from("tutor_messages").insert(rows as any);
+              if (rows.length) await supabase.from("tutor_messages").insert(rows as any);
 
               // Auto-title from first user message
               if (thread.title === "New chat") {
