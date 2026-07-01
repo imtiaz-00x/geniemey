@@ -88,8 +88,10 @@ export type Database = {
           display_name: string | null
           id: string
           last_active_date: string | null
+          login_method: string | null
           total_xp: number
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -98,8 +100,10 @@ export type Database = {
           display_name?: string | null
           id: string
           last_active_date?: string | null
+          login_method?: string | null
           total_xp?: number
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -108,8 +112,10 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_active_date?: string | null
+          login_method?: string | null
           total_xp?: number
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -290,7 +296,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_username_available: { Args: { _username: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
