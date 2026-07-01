@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,11 +37,14 @@ function ProfilePage() {
 
   const [displayName, setDisplayName] = useState<string>("");
   const [username, setUsername] = useState<string>("");
-  const initialized = profileQ.data && (displayName === "" && username === "");
-  if (initialized) {
-    setDisplayName(profileQ.data?.profile?.display_name ?? "");
-    setUsername(profileQ.data?.profile?.username ?? "");
-  }
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    if (!hydrated && profileQ.data?.profile) {
+      setDisplayName(profileQ.data.profile.display_name ?? "");
+      setUsername(profileQ.data.profile.username ?? "");
+      setHydrated(true);
+    }
+  }, [hydrated, profileQ.data]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
