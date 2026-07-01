@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/study.functions";
-import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut, Camera, Trophy, Info } from "lucide-react";
+import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut, Camera, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated")({
