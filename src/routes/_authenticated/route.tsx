@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/study.functions";
-import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut, Camera, Trophy, Info } from "lucide-react";
+import { Flame, GraduationCap, Home, MessageCircle, BarChart3, LogOut, Camera, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -62,13 +62,13 @@ function AuthedLayout() {
               <GraduationCap className="size-3.5" />
               {profile?.total_xp ?? 0} XP
             </div>
-            <Link to="/about" className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition px-2">
-              <span className="hidden sm:inline">About</span>
-              <Info className="size-4 sm:hidden" />
+            <Link to="/profile" aria-label="Your profile" className="inline-flex items-center justify-center size-9 rounded-full bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/80 transition">
+              {(profile?.display_name?.trim()?.[0] ?? "U").toUpperCase()}
             </Link>
             <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
               <LogOut className="size-4" />
             </Button>
+
           </div>
         </div>
       </header>

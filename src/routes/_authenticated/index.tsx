@@ -28,6 +28,14 @@ const SUBJECT_META: Record<string, { icon: React.ComponentType<{ className?: str
   "Social Studies": { icon: Landmark, color: "oklch(0.6 0.16 50)", blurb: "History, civics, geo…" },
 };
 
+function greetingFor(name?: string | null) {
+  const hour = new Date().getHours();
+  const who = (name && name.trim()) || "there";
+  if (hour < 12) return { title: `Good Morning, ${who} ☀️`, emoji: "☀️" };
+  if (hour < 17) return { title: `Good Afternoon, ${who}`, emoji: "" };
+  return { title: `Good Evening, ${who} 🌙`, emoji: "🌙" };
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const [grade, setGrade] = useState<number>(10);
@@ -52,6 +60,9 @@ function HomePage() {
 
   const dashboardQ = useQuery({ queryKey: ["dashboard"], queryFn: () => dash() });
   const lastSession = dashboardQ.data?.sessions?.[0];
+  const profile = dashboardQ.data?.profile;
+  const firstName = (profile?.display_name ?? "").split(" ")[0] || null;
+  const greeting = greetingFor(firstName);
 
   const startMut = useMutation({
     mutationFn: async (topic: string) =>
@@ -63,11 +74,18 @@ function HomePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-5 space-y-6 pb-24">
       <section>
-        <h1 className="text-2xl font-bold">Hi there! What are we studying today?</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Pick your class, subject, and topic. StudyGenie will write the lesson and a quiz for you.
-        </p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{greeting.title}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mt-1">
+          Hi {firstName ?? "there"} <span aria-hidden>👋</span>
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">What are we studying today?</p>
+        <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="font-semibold text-primary">{profile?.total_xp ?? 0} XP</span>
+          <span aria-hidden>•</span>
+          <span>{profile?.current_streak ?? 0} Day Streak <span aria-hidden>🔥</span></span>
+        </div>
       </section>
+
 
       {lastSession && !lastSession.completed && (
         <Card
