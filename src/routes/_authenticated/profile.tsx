@@ -150,6 +150,18 @@ function ProfilePage() {
 
       <Card className="p-4 flex items-center justify-between">
         <div>
+          <p className="font-semibold text-sm">About StudyGenie</p>
+          <p className="text-xs text-muted-foreground">Learn what StudyGenie can do for you.</p>
+        </div>
+        <Link to="/about">
+          <Button variant="outline">
+            <Info className="size-4" /> About
+          </Button>
+        </Link>
+      </Card>
+
+      <Card className="p-4 flex items-center justify-between">
+        <div>
           <p className="font-semibold text-sm">Sign out</p>
           <p className="text-xs text-muted-foreground">You'll be returned to the login screen.</p>
         </div>
@@ -157,6 +169,10 @@ function ProfilePage() {
           <LogOut className="size-4" /> Log out
         </Button>
       </Card>
+
+      <p className="text-center text-[11px] text-muted-foreground pt-2">
+        StudyGenie · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+      </p>
     </div>
   );
 }
