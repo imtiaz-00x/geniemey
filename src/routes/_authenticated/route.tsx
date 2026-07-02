@@ -54,7 +54,12 @@ function AuthedLayout() {
             <div className="size-8 shrink-0 rounded-lg bg-primary text-primary-foreground grid place-items-center">
               <Flame className="size-4" />
             </div>
-            <span className="font-bold tracking-tight truncate">StudyGenie</span>
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="font-bold tracking-tight truncate">StudyGenie</span>
+              <span className="text-[9px] text-muted-foreground truncate">
+                Powered by StenMey Technologies
+              </span>
+            </div>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/60 text-accent-foreground text-xs font-medium">

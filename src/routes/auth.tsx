@@ -288,6 +288,9 @@ function AuthPage() {
           <p className="text-center text-xs text-muted-foreground mt-6">
             <Link to="/" className="hover:underline">Go back home</Link>
           </p>
+          <p className="text-center text-[11px] text-muted-foreground mt-2">
+            StudyGenie · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+          </p>
         </div>
       </main>
     </div>
