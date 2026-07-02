@@ -19,11 +19,14 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const router = useRouter();
   const qc = useQueryClient();
+  const { user } = Route.useRouteContext();
   const dashboard = useServerFn(getDashboard);
   const { data } = useQuery({
-    queryKey: ["dashboard-header"],
+    queryKey: ["dashboard-header", user?.id],
     queryFn: () => dashboard(),
+    enabled: Boolean(user?.id),
     staleTime: 30_000,
+    retry: false,
   });
   const profile = data?.profile;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
