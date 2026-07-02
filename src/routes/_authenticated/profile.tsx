@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, LogOut, Flame, GraduationCap } from "lucide-react";
+import { checkUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -56,10 +57,7 @@ function ProfilePage() {
         throw new Error("Username must be 3-20 chars: letters, numbers, _ or .");
       }
       if (cleanUsername && cleanUsername !== currentUsername) {
-        const { data: available, error: rpcErr } = await supabase.rpc("is_username_available", {
-          _username: cleanUsername,
-        });
-        if (rpcErr) throw rpcErr;
+        const { available } = await checkUsernameAvailable({ data: { username: cleanUsername } });
         if (!available) throw new Error("That username is already taken");
       }
 

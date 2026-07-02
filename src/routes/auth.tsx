@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Flame, GraduationCap, Eye, EyeOff, UserRound } from "lucide-react";
+import { checkUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -102,10 +103,7 @@ function AuthPage() {
         if (password.length < 6) throw new Error("Password must be at least 6 characters");
 
         // Availability check
-        const { data: available, error: rpcErr } = await supabase.rpc("is_username_available", {
-          _username: username.trim(),
-        });
-        if (rpcErr) throw rpcErr;
+        const { available } = await checkUsernameAvailable({ data: { username: username.trim() } });
         if (!available) throw new Error("That username is already taken");
 
         const { error } = await supabase.auth.signUp({
