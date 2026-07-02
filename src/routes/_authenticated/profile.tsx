@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, LogOut, Flame, GraduationCap } from "lucide-react";
+import { ArrowLeft, LogOut, Flame, GraduationCap, Info } from "lucide-react";
 import { checkUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
