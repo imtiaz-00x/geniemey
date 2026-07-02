@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Flame, GraduationCap, Eye, EyeOff, UserRound } from "lucide-react";
-import { checkUsernameAvailable } from "@/lib/username.functions";
+import { checkUsernameAvailable, signUpWithUsername } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
