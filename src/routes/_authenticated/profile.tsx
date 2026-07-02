@@ -56,10 +56,7 @@ function ProfilePage() {
         throw new Error("Username must be 3-20 chars: letters, numbers, _ or .");
       }
       if (cleanUsername && cleanUsername !== currentUsername) {
-        const { data: available, error: rpcErr } = await supabase.rpc("is_username_available", {
-          _username: cleanUsername,
-        });
-        if (rpcErr) throw rpcErr;
+        const { available } = await checkUsernameAvailable({ data: { username: cleanUsername } });
         if (!available) throw new Error("That username is already taken");
       }
 
