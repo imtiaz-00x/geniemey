@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Flame, GraduationCap, Eye, EyeOff, UserRound } from "lucide-react";
-import { checkUsernameAvailable } from "@/lib/username.functions";
+import { checkUsernameAvailable, signUpWithUsername } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -102,28 +102,25 @@ function AuthPage() {
         if (!displayName.trim()) throw new Error("Please enter a display name");
         if (password.length < 6) throw new Error("Password must be at least 6 characters");
 
-        // Availability check
-        const { available } = await checkUsernameAvailable({ data: { username: username.trim() } });
-        if (!available) throw new Error("That username is already taken");
-
-        const { error } = await supabase.auth.signUp({
-          email: email.trim() || syntheticEmail,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: {
-              display_name: displayName.trim(),
-              name: displayName.trim(),
-              username: username.trim().toLowerCase(),
-              login_method: "username",
-            },
+        // Create pre-confirmed user on the server (synthetic email can't receive confirmations)
+        const { email: syntheticEmail } = await signUpWithUsername({
+          data: {
+            username: username.trim(),
+            password,
+            displayName: displayName.trim(),
           },
         });
-        if (error) throw error;
+
+        // Sign the user in immediately
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: syntheticEmail,
+          password,
+        });
+        if (signInErr) throw signInErr;
         toast.success(`Welcome, ${displayName.trim()}!`);
       } else {
-        // Sign in: try username→synthetic email first, else if they provided email use that
-        const loginEmail = email.trim() || syntheticEmail;
+        // Sign in: username → synthetic email, or use provided email
+        const loginEmail = email.trim() || usernameToEmail(username);
         const { error } = await supabase.auth.signInWithPassword({
           email: loginEmail,
           password,
