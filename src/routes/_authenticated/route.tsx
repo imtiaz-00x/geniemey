@@ -56,7 +56,7 @@ function AuthedLayout() {
             </div>
             <div className="flex flex-col leading-tight min-w-0">
               <span className="font-bold tracking-tight truncate">StudyGenie</span>
-              <span className="text-[9px] text-muted-foreground truncate hidden xs:inline sm:inline">
+              <span className="text-[9px] text-muted-foreground truncate">
                 Powered by StenMey Technologies
               </span>
             </div>
