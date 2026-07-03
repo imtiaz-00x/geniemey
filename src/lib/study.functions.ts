@@ -21,7 +21,7 @@ export const SOCIAL_BRANCHES = [
   "Road Safety Education",
 ] as const;
 
-export const EXAM_TRACKS = ["JEE", "NEET", "CUET", "Olympiad", "NTSE", "Foundation"] as const;
+export const EXAM_TRACKS = ["JEE", "NEET", "CUET", "NDA", "UPSC", "Olympiad", "NTSE", "Foundation"] as const;
 
 const subjectSchema = z.string().min(1).max(40);
 const gradeSchema = z.number().int().min(1).max(12);
