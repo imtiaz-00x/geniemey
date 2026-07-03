@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Sparkles, Building2, Quote } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import founderAsset from "@/assets/founder.png.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
 
