@@ -104,7 +104,6 @@ function ProfilePage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const profile = profileQ.data?.profile;
 
   const fileRef = useRef<HTMLInputElement | null>(null);
   const avatarMut = useMutation({
