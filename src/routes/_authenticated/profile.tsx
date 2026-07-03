@@ -106,6 +106,33 @@ function ProfilePage() {
 
   const profile = profileQ.data?.profile;
 
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const avatarMut = useMutation({
+    mutationFn: async (file: File | null) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      let avatar_url: string | null = null;
+      if (file) {
+        if (!file.type.startsWith("image/")) throw new Error("Please choose an image file");
+        if (file.size > 8 * 1024 * 1024) throw new Error("Image is too large (max 8MB)");
+        avatar_url = await resizeImageToDataUrl(file, 320);
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url }).eq("id", uid);
+      if (error) throw error;
+    },
+    onSuccess: (_d, file) => {
+      toast.success(file ? "Photo updated" : "Photo removed");
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-header"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const profile = profileQ.data?.profile;
+  const initial = (displayName || profile?.display_name || "U").trim().charAt(0).toUpperCase();
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-5 pb-24">
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
@@ -116,6 +143,63 @@ function ProfilePage() {
         <h1 className="text-2xl font-bold tracking-tight">Your profile</h1>
         <p className="text-sm text-muted-foreground mt-1">Update how you appear in StudyGenie.</p>
       </div>
+
+      <Card className="p-5 flex flex-col items-center gap-3">
+        <div className="relative">
+          <div className="size-28 rounded-full overflow-hidden border-4 border-primary/25 bg-primary/10 grid place-items-center shadow">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Your profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl font-bold text-primary">{initial}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={avatarMut.isPending}
+            aria-label="Change profile photo"
+            className="absolute -bottom-1 -right-1 size-9 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-md hover:opacity-90 disabled:opacity-60"
+          >
+            <Camera className="size-4" />
+          </button>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) avatarMut.mutate(f);
+          }}
+        />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileRef.current?.click()}
+            disabled={avatarMut.isPending}
+          >
+            <UserIcon className="size-4" />
+            {avatarMut.isPending ? "Uploading..." : profile?.avatar_url ? "Change photo" : "Upload photo"}
+          </Button>
+          {profile?.avatar_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => avatarMut.mutate(null)}
+              disabled={avatarMut.isPending}
+            >
+              <Trash2 className="size-4" /> Remove
+            </Button>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground text-center">
+          Square images look best. Max 8MB.
+        </p>
+      </Card>
+
 
       <Card className="p-4 flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">
