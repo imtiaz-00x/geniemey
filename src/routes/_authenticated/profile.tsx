@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, LogOut, Flame, GraduationCap, Info } from "lucide-react";
+import { ArrowLeft, LogOut, Flame, GraduationCap, Info, Camera, Trash2, User as UserIcon } from "lucide-react";
 import { checkUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -15,6 +15,20 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 
 const isUsernameValid = (u: string) => /^[a-zA-Z0-9_.]{3,20}$/.test(u);
+
+async function resizeImageToDataUrl(file: File, size = 320): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  // cover-fit crop
+  const scale = Math.max(size / bitmap.width, size / bitmap.height);
+  const w = bitmap.width * scale;
+  const h = bitmap.height * scale;
+  ctx.drawImage(bitmap, (size - w) / 2, (size - h) / 2, w, h);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
 
 function ProfilePage() {
   const navigate = useNavigate();
