@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Sparkles, Building2, Quote } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import founderAsset from "@/assets/founder.png.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
 
@@ -10,6 +12,18 @@ export const Route = createFileRoute("/_authenticated/about")({
 });
 
 function AboutPage() {
+  const { data: avatarUrl } = useQuery({
+    queryKey: ["about-founder-avatar"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      if (!uid) return null;
+      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", uid).maybeSingle();
+      return data?.avatar_url ?? null;
+    },
+    staleTime: 30_000,
+  });
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-5 pb-24 space-y-8">
       <div>
@@ -94,7 +108,7 @@ function AboutPage() {
         <Card className="p-6 rounded-2xl border border-border/80 flex flex-col items-center text-center gap-4">
           <div className="size-28 rounded-full overflow-hidden border-4 border-primary/30 shadow-md bg-primary/5">
             <img
-              src={founderAsset.url}
+              src={avatarUrl ?? founderAsset.url}
               alt="Imtiaz Ahmed — Founder"
               className="w-full h-full object-cover"
               style={{ objectPosition: "center 20%" }}
