@@ -30,6 +30,12 @@ const FUNCS = ["sqrt", "sin", "cos", "tan", "cot", "sec", "csc", "log", "ln", "e
 function plainToLatex(input: string): string {
   let s = input;
 
+  // 0) Binomial coefficients: nCr, 5C2, ^nC_r, nC(r+1) -> \binom{n}{r}
+  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?\(([^()]+)\)/g, "\\binom{$1}{$2}");
+  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?([A-Za-z0-9]+)/g, "\\binom{$1}{$2}");
+  // Permutations: nPr -> P^{n}_{r}
+  s = s.replace(/\^?([A-Za-z0-9]+)\s*P\s*_?([A-Za-z0-9]+)/g, "{}^{$1}P_{$2}");
+
   // 1) Function calls — handle balanced parens, recursively.
   //    sqrt(x+1) -> \sqrt{x+1},   sin(x) -> \sin(x)
   const funcRe = new RegExp(`\\b(${FUNCS.join("|")})\\s*\\(`, "g");
@@ -95,6 +101,7 @@ const TRIGGER_RE = new RegExp(
     `(?:` +
       `\\b(?:${FUNCS.join("|")})\\s*\\([^)]*\\)` +
       `|[A-Za-z0-9)]\\s*\\^\\s*[A-Za-z0-9(\\-]` +
+      `|\\b[A-Za-z0-9]+\\s*[CP]\\s*[A-Za-z0-9(]` +
       `|\\([^()]+\\)\\s*\\/\\s*\\([^()]+\\)` +
     `)` +
     `[A-Za-z0-9_+\\-*/^().,!=<>\\s]*?` +

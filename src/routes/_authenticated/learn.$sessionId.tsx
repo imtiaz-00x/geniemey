@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getSession, generateQuiz, submitQuiz } from "@/lib/study.functions";
+import { getSession, generateQuiz, submitQuiz, startSession, suggestTopics } from "@/lib/study.functions";
 import { createThread } from "@/lib/tutor.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calculator, FlaskConical, MessageCircle, Sparkles, CheckCircle2, XCircle, Loader2, Trophy, Clock, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Calculator, FlaskConical, MessageCircle, Sparkles, CheckCircle2, XCircle, Loader2, Trophy, Clock, RotateCcw, BookOpenCheck, Search, History } from "lucide-react";
 import { StudyMarkdown } from "@/components/study-markdown";
 import { toast } from "sonner";
 
@@ -97,6 +99,49 @@ function SessionPage() {
     onSuccess: ({ id }) => navigate({ to: "/tutor/$threadId", params: { threadId: id } }),
   });
 
+  // ----- Learn New Topic (stay in same class + subject) -----
+  const [newTopicOpen, setNewTopicOpen] = useState(false);
+  const [newTopicInput, setNewTopicInput] = useState("");
+  const [recent, setRecent] = useState<string[]>([]);
+  const recentKey = session ? `gm.recent.topics.${session.grade}.${session.subject}` : "";
+
+  useEffect(() => {
+    if (!recentKey) return;
+    try {
+      const raw = localStorage.getItem(recentKey);
+      setRecent(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      setRecent([]);
+    }
+  }, [recentKey]);
+
+  const suggestFn = useServerFn(suggestTopics);
+  const startFn = useServerFn(startSession);
+
+  const suggestQ = useQuery({
+    queryKey: ["learn-more-topics", session?.grade, session?.subject],
+    queryFn: () => suggestFn({ data: { grade: session!.grade, subject: session!.subject } }),
+    enabled: newTopicOpen && !!session,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const startNewMut = useMutation({
+    mutationFn: async (topic: string) => {
+      if (!session) throw new Error("No session");
+      return startFn({ data: { grade: session.grade, subject: session.subject, topic } });
+    },
+    onSuccess: ({ sessionId: newId }, topic) => {
+      try {
+        const next = [topic, ...recent.filter((t) => t !== topic)].slice(0, 6);
+        localStorage.setItem(recentKey, JSON.stringify(next));
+      } catch { /* ignore */ }
+      setNewTopicOpen(false);
+      setNewTopicInput("");
+      navigate({ to: "/learn/$sessionId", params: { sessionId: newId } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (sessionQ.isLoading || !session) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
@@ -151,6 +196,9 @@ function SessionPage() {
               </Button>
               <Button variant="outline" onClick={() => askTutorMut.mutate()} disabled={askTutorMut.isPending}>
                 <MessageCircle className="size-4 mr-1.5" /> Got a doubt?
+              </Button>
+              <Button variant="outline" onClick={() => setNewTopicOpen(true)}>
+                <BookOpenCheck className="size-4 mr-1.5" /> Learn New Topic
               </Button>
             </div>
           </Card>
@@ -257,6 +305,87 @@ function SessionPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Sheet open={newTopicOpen} onOpenChange={setNewTopicOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader className="text-left">
+            <SheetTitle className="flex items-center gap-2">
+              <BookOpenCheck className="size-5 text-primary" /> Learn a new topic
+            </SheetTitle>
+            <SheetDescription>
+              Class {session.grade} · {session.subject} — you're staying in the same subject.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form
+            className="mt-4 flex gap-2 px-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const t = newTopicInput.trim();
+              if (t) startNewMut.mutate(t);
+            }}
+          >
+            <div className="relative flex-1">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={newTopicInput}
+                onChange={(e) => setNewTopicInput(e.target.value)}
+                placeholder="What would you like to learn next?"
+                className="h-11 pl-9"
+              />
+            </div>
+            <Button type="submit" disabled={startNewMut.isPending || !newTopicInput.trim()} className="h-11">
+              {startNewMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              <span className="ml-1.5">Start</span>
+            </Button>
+          </form>
+
+          {recent.length > 0 && (
+            <div className="mt-5 px-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <History className="size-3.5" /> Recent
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recent.map((t) => (
+                  <button
+                    key={t}
+                    disabled={startNewMut.isPending}
+                    onClick={() => startNewMut.mutate(t)}
+                    className="px-3 py-1.5 rounded-full bg-secondary border border-border text-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition disabled:opacity-50"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 px-4 pb-6 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Suggested for {session.subject}
+            </p>
+            {suggestQ.isLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" /> Loading suggestions…
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {suggestQ.data?.topics?.map((t) => (
+                  <button
+                    key={t}
+                    disabled={startNewMut.isPending}
+                    onClick={() => startNewMut.mutate(t)}
+                    className="px-3 py-1.5 rounded-full bg-secondary border border-border text-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition disabled:opacity-50"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -302,10 +431,10 @@ function QuizRunner({
       )}
       {questions.map((q, i) => (
         <Card key={i} className="p-4 space-y-3">
-          <p className="font-semibold">
-            <span className="text-primary mr-1">Q{i + 1}.</span>
-            {q.q}
-          </p>
+          <div className="font-semibold flex gap-1">
+            <span className="text-primary shrink-0">Q{i + 1}.</span>
+            <div className="flex-1"><StudyMarkdown>{q.q}</StudyMarkdown></div>
+          </div>
           <div className="grid gap-2">
             {q.choices.map((c, ci) => {
               const selected = answers[i] === ci;
@@ -317,16 +446,16 @@ function QuizRunner({
                     next[i] = ci;
                     setAnswers(next);
                   }}
-                  className={`text-left px-3 py-2.5 rounded-lg border-2 text-sm transition ${
+                  className={`text-left px-3 py-2.5 rounded-lg border-2 text-sm transition flex items-start gap-2 ${
                     selected
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-primary/40"
                   }`}
                 >
-                  <span className="inline-flex size-6 rounded-full bg-muted text-foreground/80 text-xs items-center justify-center font-semibold mr-2">
+                  <span className="inline-flex size-6 rounded-full bg-muted text-foreground/80 text-xs items-center justify-center font-semibold shrink-0">
                     {String.fromCharCode(65 + ci)}
                   </span>
-                  {c}
+                  <div className="flex-1 min-w-0"><StudyMarkdown>{c}</StudyMarkdown></div>
                 </button>
               );
             })}
