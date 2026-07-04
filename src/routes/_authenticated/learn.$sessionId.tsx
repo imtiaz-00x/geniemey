@@ -197,6 +197,9 @@ function SessionPage() {
               <Button variant="outline" onClick={() => askTutorMut.mutate()} disabled={askTutorMut.isPending}>
                 <MessageCircle className="size-4 mr-1.5" /> Got a doubt?
               </Button>
+              <Button variant="outline" onClick={() => setNewTopicOpen(true)}>
+                <BookOpenCheck className="size-4 mr-1.5" /> Learn New Topic
+              </Button>
             </div>
           </Card>
         </TabsContent>
