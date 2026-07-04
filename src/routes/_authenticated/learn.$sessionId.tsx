@@ -99,6 +99,49 @@ function SessionPage() {
     onSuccess: ({ id }) => navigate({ to: "/tutor/$threadId", params: { threadId: id } }),
   });
 
+  // ----- Learn New Topic (stay in same class + subject) -----
+  const [newTopicOpen, setNewTopicOpen] = useState(false);
+  const [newTopicInput, setNewTopicInput] = useState("");
+  const [recent, setRecent] = useState<string[]>([]);
+  const recentKey = session ? `gm.recent.topics.${session.grade}.${session.subject}` : "";
+
+  useEffect(() => {
+    if (!recentKey) return;
+    try {
+      const raw = localStorage.getItem(recentKey);
+      setRecent(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      setRecent([]);
+    }
+  }, [recentKey]);
+
+  const suggestFn = useServerFn(suggestTopics);
+  const startFn = useServerFn(startSession);
+
+  const suggestQ = useQuery({
+    queryKey: ["learn-more-topics", session?.grade, session?.subject],
+    queryFn: () => suggestFn({ data: { grade: session!.grade, subject: session!.subject } }),
+    enabled: newTopicOpen && !!session,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const startNewMut = useMutation({
+    mutationFn: async (topic: string) => {
+      if (!session) throw new Error("No session");
+      return startFn({ data: { grade: session.grade, subject: session.subject, topic } });
+    },
+    onSuccess: ({ sessionId: newId }, topic) => {
+      try {
+        const next = [topic, ...recent.filter((t) => t !== topic)].slice(0, 6);
+        localStorage.setItem(recentKey, JSON.stringify(next));
+      } catch { /* ignore */ }
+      setNewTopicOpen(false);
+      setNewTopicInput("");
+      navigate({ to: "/learn/$sessionId", params: { sessionId: newId } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (sessionQ.isLoading || !session) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
