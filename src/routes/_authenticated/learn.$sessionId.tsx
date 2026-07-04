@@ -431,10 +431,10 @@ function QuizRunner({
       )}
       {questions.map((q, i) => (
         <Card key={i} className="p-4 space-y-3">
-          <p className="font-semibold">
-            <span className="text-primary mr-1">Q{i + 1}.</span>
-            {q.q}
-          </p>
+          <div className="font-semibold flex gap-1">
+            <span className="text-primary shrink-0">Q{i + 1}.</span>
+            <div className="flex-1"><StudyMarkdown>{q.q}</StudyMarkdown></div>
+          </div>
           <div className="grid gap-2">
             {q.choices.map((c, ci) => {
               const selected = answers[i] === ci;
@@ -446,16 +446,16 @@ function QuizRunner({
                     next[i] = ci;
                     setAnswers(next);
                   }}
-                  className={`text-left px-3 py-2.5 rounded-lg border-2 text-sm transition ${
+                  className={`text-left px-3 py-2.5 rounded-lg border-2 text-sm transition flex items-start gap-2 ${
                     selected
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-primary/40"
                   }`}
                 >
-                  <span className="inline-flex size-6 rounded-full bg-muted text-foreground/80 text-xs items-center justify-center font-semibold mr-2">
+                  <span className="inline-flex size-6 rounded-full bg-muted text-foreground/80 text-xs items-center justify-center font-semibold shrink-0">
                     {String.fromCharCode(65 + ci)}
                   </span>
-                  {c}
+                  <div className="flex-1 min-w-0"><StudyMarkdown>{c}</StudyMarkdown></div>
                 </button>
               );
             })}
