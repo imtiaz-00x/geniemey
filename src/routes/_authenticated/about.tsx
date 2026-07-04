@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Sparkles, Building2, Quote } from "lucide-react";
+import { ArrowLeft, Mail, Sparkles, Building2, Quote, Target, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import founderAsset from "@/assets/founder.png.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
@@ -36,27 +36,51 @@ function AboutPage() {
         </Link>
       </div>
 
-      {/* About StudyGenie */}
+      {/* About GenieMey */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
             <Sparkles className="size-4" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">About StudyGenie</h1>
+          <h1 className="text-2xl font-bold tracking-tight">About GenieMey</h1>
         </div>
         <Card className="p-5 rounded-2xl border border-border/80 space-y-3 text-[0.95rem] leading-relaxed text-foreground/90">
           <p>
-            StudyGenie is a student-focused learning platform created to make studying
-            simpler, smarter and more engaging.
+            GenieMey is an AI-powered learning platform designed to help students study smarter
+            through interactive learning, tests, AI assistance, revision tools and personalized
+            study experiences.
           </p>
           <p>
-            The platform brings together learning tools such as tests, study resources,
-            AI-powered assistance and progress tracking to help students learn more
-            effectively.
+            Our mission is to make learning simple, engaging and accessible for every student.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Built with <span className="text-destructive">❤</span> by{" "}
+            <span className="font-semibold text-foreground">StenMey Technologies</span>.
+          </p>
+        </Card>
+      </section>
+
+      {/* Our Mission */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Target className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Our Mission</h2>
+        </div>
+        <Card className="p-5 rounded-2xl border border-border/80 space-y-3 text-[0.95rem] leading-relaxed text-foreground/90">
+          <p>
+            GenieMey was created with one simple goal: to bring everything a student needs for
+            learning into one platform.
           </p>
           <p>
-            Our goal is to make quality learning more accessible and help students build
-            better study habits.
+            Instead of switching between multiple websites, search engines, AI chatbots and apps,
+            students can access chapter explanations, notes, homework help, AI assistance, practice
+            tests, revision tools and study resources in one place.
+          </p>
+          <p>
+            Our mission is to save students' time, simplify learning and help them prepare with
+            confidence.
           </p>
           <p className="text-sm text-muted-foreground">
             Built by <span className="font-semibold text-foreground">StenMey Technologies</span>.
@@ -82,13 +106,12 @@ function AboutPage() {
           </div>
           <div className="space-y-3 text-[0.95rem] leading-relaxed text-foreground/90">
             <p>
-              StenMey Technologies is a student-led technology initiative focused on
-              creating useful digital products for learning, innovation and everyday
-              problem solving.
+              StenMey Technologies is a student-led technology initiative focused on creating
+              useful digital products for learning, innovation and everyday problem solving.
             </p>
             <p>
-              We aim to build simple, modern and impactful technology that helps people
-              learn, create and grow.
+              We aim to build simple, modern and impactful technology that helps people learn,
+              create and grow.
             </p>
             <p className="text-sm font-medium text-primary italic">
               Building ideas for the future.
@@ -120,7 +143,7 @@ function AboutPage() {
           </div>
           <div className="space-y-3 text-[0.95rem] leading-relaxed text-foreground/90 text-left">
             <p>
-              StudyGenie started as an idea to improve the way students learn and access
+              GenieMey started as an idea to improve the way students learn and access
               educational support. This project is being developed with a focus on making
               learning more accessible and practical for students.
             </p>
@@ -129,14 +152,13 @@ function AboutPage() {
         </Card>
       </section>
 
-      <section className="text-center pt-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Version 1.0 Beta
-        </p>
+      <section className="text-center pt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Heart className="size-3 text-destructive" />
+        <span className="uppercase tracking-wider">Version 1.0 Beta</span>
       </section>
 
       <section className="flex justify-center pb-4">
-        <a href="mailto:feedback@studygenie.app?subject=StudyGenie%20Feedback">
+        <a href="mailto:feedback@geniemey.app?subject=GenieMey%20Feedback">
           <Button className="rounded-full px-6 h-11 gap-2">
             <Mail className="size-4" />
             Send Feedback
