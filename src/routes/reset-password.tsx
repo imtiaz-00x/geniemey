@@ -56,7 +56,7 @@ function ResetPasswordPage() {
         <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center">
           <Flame className="size-5" />
         </div>
-        <span className="font-bold text-lg">StudyGenie</span>
+        <span className="font-bold text-lg">GenieMey</span>
       </header>
       <main className="flex-1 flex items-center justify-center px-4 pb-12">
         <Card className="w-full max-w-md border-border/60 shadow-lg">

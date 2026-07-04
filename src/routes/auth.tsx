@@ -166,7 +166,7 @@ function AuthPage() {
         <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-bold">
           <Flame className="size-5" />
         </div>
-        <span className="font-bold text-lg">StudyGenie</span>
+        <span className="font-bold text-lg">GenieMey</span>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 pb-12">
@@ -289,7 +289,7 @@ function AuthPage() {
             <Link to="/" className="hover:underline">Go back home</Link>
           </p>
           <p className="text-center text-[11px] text-muted-foreground mt-2">
-            StudyGenie · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+            GenieMey · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
           </p>
         </div>
       </main>
