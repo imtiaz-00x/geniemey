@@ -305,6 +305,87 @@ function SessionPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Sheet open={newTopicOpen} onOpenChange={setNewTopicOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader className="text-left">
+            <SheetTitle className="flex items-center gap-2">
+              <BookOpenCheck className="size-5 text-primary" /> Learn a new topic
+            </SheetTitle>
+            <SheetDescription>
+              Class {session.grade} · {session.subject} — you're staying in the same subject.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form
+            className="mt-4 flex gap-2 px-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const t = newTopicInput.trim();
+              if (t) startNewMut.mutate(t);
+            }}
+          >
+            <div className="relative flex-1">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={newTopicInput}
+                onChange={(e) => setNewTopicInput(e.target.value)}
+                placeholder="What would you like to learn next?"
+                className="h-11 pl-9"
+              />
+            </div>
+            <Button type="submit" disabled={startNewMut.isPending || !newTopicInput.trim()} className="h-11">
+              {startNewMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              <span className="ml-1.5">Start</span>
+            </Button>
+          </form>
+
+          {recent.length > 0 && (
+            <div className="mt-5 px-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <History className="size-3.5" /> Recent
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recent.map((t) => (
+                  <button
+                    key={t}
+                    disabled={startNewMut.isPending}
+                    onClick={() => startNewMut.mutate(t)}
+                    className="px-3 py-1.5 rounded-full bg-secondary border border-border text-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition disabled:opacity-50"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 px-4 pb-6 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Suggested for {session.subject}
+            </p>
+            {suggestQ.isLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" /> Loading suggestions…
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {suggestQ.data?.topics?.map((t) => (
+                  <button
+                    key={t}
+                    disabled={startNewMut.isPending}
+                    onClick={() => startNewMut.mutate(t)}
+                    className="px-3 py-1.5 rounded-full bg-secondary border border-border text-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition disabled:opacity-50"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
