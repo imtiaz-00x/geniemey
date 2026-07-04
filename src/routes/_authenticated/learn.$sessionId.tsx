@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getSession, generateQuiz, submitQuiz } from "@/lib/study.functions";
+import { getSession, generateQuiz, submitQuiz, startSession, suggestTopics } from "@/lib/study.functions";
 import { createThread } from "@/lib/tutor.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calculator, FlaskConical, MessageCircle, Sparkles, CheckCircle2, XCircle, Loader2, Trophy, Clock, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Calculator, FlaskConical, MessageCircle, Sparkles, CheckCircle2, XCircle, Loader2, Trophy, Clock, RotateCcw, BookOpenCheck, Search, History } from "lucide-react";
 import { StudyMarkdown } from "@/components/study-markdown";
 import { toast } from "sonner";
 
