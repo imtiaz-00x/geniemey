@@ -161,7 +161,7 @@ function ProfilePage() {
           onChange={(e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
-            if (f) avatarMut.mutate(f);
+            if (f) pickFile(f);
           }}
         />
         <div className="flex items-center gap-2">
