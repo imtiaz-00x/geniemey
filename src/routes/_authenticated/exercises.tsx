@@ -153,11 +153,13 @@ function ExerciseDetail({
   subject,
   chapter,
   exercise,
+  expectedCount,
 }: {
   grade: number;
   subject: string;
   chapter: string;
   exercise: string;
+  expectedCount?: number;
 }) {
   const qc = useQueryClient();
   const qFn = useServerFn(getExerciseQuestions);
@@ -165,10 +167,11 @@ function ExerciseDetail({
   const markFn = useServerFn(markExerciseQuestion);
 
   const qsQ = useQuery({
-    queryKey: ["exercise-questions", grade, subject, chapter, exercise],
-    queryFn: () => qFn({ data: { grade, subject, chapter, exercise } }),
+    queryKey: ["exercise-questions", grade, subject, chapter, exercise, expectedCount ?? 0],
+    queryFn: () => qFn({ data: { grade, subject, chapter, exercise, expectedCount } }),
     staleTime: 1000 * 60 * 30,
   });
+
 
   const [openAction, setOpenAction] = useState<
     { idx: number; kind: "solution" | "explain" | "similar" } | null
