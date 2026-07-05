@@ -114,7 +114,7 @@ function ExerciseList({
               <Link
                 key={ex.name}
                 to="/exercises"
-                search={{ grade, subject, chapter, exercise: ex.name }}
+                search={{ grade, subject, chapter, exercise: ex.name, expectedCount: ex.questionCount }}
                 className="block"
               >
                 <Card
