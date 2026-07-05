@@ -9,26 +9,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, LogOut, Flame, GraduationCap, Info, Camera, Trash2, User as UserIcon } from "lucide-react";
 import { checkUsernameAvailable } from "@/lib/username.functions";
+import { AvatarCropper } from "@/components/avatar-cropper";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
 const isUsernameValid = (u: string) => /^[a-zA-Z0-9_.]{3,20}$/.test(u);
-
-async function resizeImageToDataUrl(file: File, size = 320): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  // cover-fit crop
-  const scale = Math.max(size / bitmap.width, size / bitmap.height);
-  const w = bitmap.width * scale;
-  const h = bitmap.height * scale;
-  ctx.drawImage(bitmap, (size - w) / 2, (size - h) / 2, w, h);
-  return canvas.toDataURL("image/jpeg", 0.85);
-}
 
 function ProfilePage() {
   const navigate = useNavigate();
@@ -106,28 +93,32 @@ function ProfilePage() {
 
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const avatarMut = useMutation({
-    mutationFn: async (file: File | null) => {
+    mutationFn: async (avatar_url: string | null) => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) throw new Error("Not signed in");
-      let avatar_url: string | null = null;
-      if (file) {
-        if (!file.type.startsWith("image/")) throw new Error("Please choose an image file");
-        if (file.size > 8 * 1024 * 1024) throw new Error("Image is too large (max 8MB)");
-        avatar_url = await resizeImageToDataUrl(file, 320);
-      }
       const { error } = await supabase.from("profiles").update({ avatar_url }).eq("id", uid);
       if (error) throw error;
     },
-    onSuccess: (_d, file) => {
-      toast.success(file ? "Photo updated" : "Photo removed");
+    onSuccess: (_d, avatar_url) => {
+      toast.success(avatar_url ? "Photo updated" : "Photo removed");
+      setCropSrc(null);
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       qc.invalidateQueries({ queryKey: ["dashboard-header"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  function pickFile(f: File) {
+    if (!f.type.startsWith("image/")) return toast.error("Please choose an image file");
+    if (f.size > 8 * 1024 * 1024) return toast.error("Image is too large (max 8MB)");
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(f);
+  }
 
   const profile = profileQ.data?.profile;
   const initial = (displayName || profile?.display_name || "U").trim().charAt(0).toUpperCase();
@@ -170,7 +161,7 @@ function ProfilePage() {
           onChange={(e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
-            if (f) avatarMut.mutate(f);
+            if (f) pickFile(f);
           }}
         />
         <div className="flex items-center gap-2">
@@ -270,6 +261,14 @@ function ProfilePage() {
       <p className="text-center text-[11px] text-muted-foreground pt-2">
         GenieMey · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
       </p>
+
+      <AvatarCropper
+        open={Boolean(cropSrc)}
+        imageSrc={cropSrc}
+        busy={avatarMut.isPending}
+        onCancel={() => setCropSrc(null)}
+        onCropped={(url) => avatarMut.mutate(url)}
+      />
     </div>
   );
 }
