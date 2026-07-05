@@ -173,7 +173,7 @@ function AuthPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-5">
             <div className="inline-flex items-center gap-2 text-sm bg-accent/60 text-accent-foreground px-3 py-1 rounded-full">
-              <GraduationCap className="size-4" /> For Math & Science learners
+              <GraduationCap className="size-4" /> Because Genie is For Geniuses
             </div>
             <h1 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight">
               {mode === "signin" ? "Welcome back" : "Start learning today"}
