@@ -23,10 +23,17 @@ function AuthedLayout() {
   const dashboard = useServerFn(getDashboard);
   const { data } = useQuery({
     queryKey: ["dashboard-header", user?.id],
-    queryFn: () => dashboard(),
+    queryFn: async () => {
+      try {
+        return await dashboard();
+      } catch {
+        return null;
+      }
+    },
     enabled: Boolean(user?.id),
     staleTime: 30_000,
     retry: false,
+    throwOnError: false,
   });
   const profile = data?.profile;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
