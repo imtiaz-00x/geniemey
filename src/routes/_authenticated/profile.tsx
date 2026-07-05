@@ -93,28 +93,32 @@ function ProfilePage() {
 
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const avatarMut = useMutation({
-    mutationFn: async (file: File | null) => {
+    mutationFn: async (avatar_url: string | null) => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) throw new Error("Not signed in");
-      let avatar_url: string | null = null;
-      if (file) {
-        if (!file.type.startsWith("image/")) throw new Error("Please choose an image file");
-        if (file.size > 8 * 1024 * 1024) throw new Error("Image is too large (max 8MB)");
-        avatar_url = await resizeImageToDataUrl(file, 320);
-      }
       const { error } = await supabase.from("profiles").update({ avatar_url }).eq("id", uid);
       if (error) throw error;
     },
-    onSuccess: (_d, file) => {
-      toast.success(file ? "Photo updated" : "Photo removed");
+    onSuccess: (_d, avatar_url) => {
+      toast.success(avatar_url ? "Photo updated" : "Photo removed");
+      setCropSrc(null);
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       qc.invalidateQueries({ queryKey: ["dashboard-header"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  function pickFile(f: File) {
+    if (!f.type.startsWith("image/")) return toast.error("Please choose an image file");
+    if (f.size > 8 * 1024 * 1024) return toast.error("Image is too large (max 8MB)");
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(f);
+  }
 
   const profile = profileQ.data?.profile;
   const initial = (displayName || profile?.display_name || "U").trim().charAt(0).toUpperCase();
