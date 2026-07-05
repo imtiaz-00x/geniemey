@@ -9,26 +9,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, LogOut, Flame, GraduationCap, Info, Camera, Trash2, User as UserIcon } from "lucide-react";
 import { checkUsernameAvailable } from "@/lib/username.functions";
+import { AvatarCropper } from "@/components/avatar-cropper";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
 const isUsernameValid = (u: string) => /^[a-zA-Z0-9_.]{3,20}$/.test(u);
-
-async function resizeImageToDataUrl(file: File, size = 320): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  // cover-fit crop
-  const scale = Math.max(size / bitmap.width, size / bitmap.height);
-  const w = bitmap.width * scale;
-  const h = bitmap.height * scale;
-  ctx.drawImage(bitmap, (size - w) / 2, (size - h) / 2, w, h);
-  return canvas.toDataURL("image/jpeg", 0.85);
-}
 
 function ProfilePage() {
   const navigate = useNavigate();
