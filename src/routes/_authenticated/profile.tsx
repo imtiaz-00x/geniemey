@@ -261,6 +261,14 @@ function ProfilePage() {
       <p className="text-center text-[11px] text-muted-foreground pt-2">
         GenieMey · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
       </p>
+
+      <AvatarCropper
+        open={Boolean(cropSrc)}
+        imageSrc={cropSrc}
+        busy={avatarMut.isPending}
+        onCancel={() => setCropSrc(null)}
+        onCropped={(url) => avatarMut.mutate(url)}
+      />
     </div>
   );
 }
