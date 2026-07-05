@@ -428,30 +428,60 @@ export const listChapterExercises = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await model();
     const fallback = [
-      { name: "Exercise 1", questionCount: 8 },
-      { name: "Miscellaneous Exercise", questionCount: 6 },
+      { name: "Exercise 1", questionCount: 10 },
+      { name: "Miscellaneous Exercise", questionCount: 10 },
     ];
     try {
       const { text } = await generateText({
         model: m,
-        prompt: `Return ONLY a JSON array (no markdown) of the textbook exercise sections inside NCERT Class ${data.grade} ${data.subject}, "${data.chapter}", in order. Always include a final item named "Miscellaneous Exercise" if the chapter has one. Each item: {"name":"Exercise 1.1","questionCount":10}. Example: [{"name":"Exercise 1.1","questionCount":8},{"name":"Miscellaneous Exercise","questionCount":12}]`,
+        maxOutputTokens: 2048,
+        prompt: `Return ONLY a JSON array (no markdown) of ALL textbook exercise sections inside NCERT Class ${data.grade} ${data.subject}, "${data.chapter}", in order. Always include a final item named "Miscellaneous Exercise" if the chapter has one. Each item: {"name":"Exercise 1.1","questionCount":N} where N is the ACTUAL number of questions in that section of the official NCERT textbook (may be 5, 12, 22, 32, etc — do not cap or guess low). Example: [{"name":"Exercise 1.1","questionCount":8},{"name":"Miscellaneous Exercise","questionCount":22}]`,
       });
       const arr = safeJsonArray(text) ?? [];
       const exercises = arr
         .map((it: any) => ({
           name: String(it?.name ?? "").trim(),
-          questionCount: Math.min(30, Math.max(1, Number(it?.questionCount) || 6)),
+          questionCount: Math.min(60, Math.max(1, Number(it?.questionCount) || 8)),
         }))
         .filter((x) => x.name)
-        .slice(0, 15);
+        .slice(0, 20);
       if (exercises.length < 1) return { exercises: fallback };
       const hasMisc = exercises.some((e) => /misc/i.test(e.name));
-      if (!hasMisc) exercises.push({ name: "Miscellaneous Exercise", questionCount: 6 });
+      if (!hasMisc) exercises.push({ name: "Miscellaneous Exercise", questionCount: 10 });
       return { exercises };
     } catch {
       return { exercises: fallback };
     }
   });
+
+async function fetchExerciseQuestionsBatch(
+  m: any,
+  data: { grade: number; subject: string; chapter: string; exercise: string },
+  opts: { expected: number; startFrom: number; isMisc: boolean },
+): Promise<{ question: string; hint: string }[]> {
+  const { expected, startFrom, isMisc } = opts;
+  const remaining = Math.max(1, expected - startFrom);
+  const startText =
+    startFrom > 0
+      ? ` Start from question Q${startFrom + 1} and continue through Q${expected}. Do NOT repeat earlier questions.`
+      : "";
+  try {
+    const { text } = await generateText({
+      model: m,
+      maxOutputTokens: 8192,
+      prompt: `Return ONLY a JSON array (no markdown, no commentary) of the textbook questions from NCERT Class ${data.grade} ${data.subject}, chapter "${data.chapter}", section "${data.exercise}"${isMisc ? " (the miscellaneous exercise — usually mixed/advanced questions)" : ""}. The official section has ${expected} questions in total; return ALL ${remaining} of the required questions in the original textbook order, preserving question numbering.${startText} Use the actual textbook questions when known; otherwise create faithful NCERT-style questions matching the section's difficulty and style. Each item: {"question":"Full question text","hint":"One short hint"}. Return exactly ${remaining} items — do not truncate. Plain text only (no LaTeX delimiters).`,
+    });
+    const arr = safeJsonArray(text) ?? [];
+    return arr
+      .map((it: any) => ({
+        question: String(it?.question ?? it?.q ?? "").trim(),
+        hint: String(it?.hint ?? "").trim() || "Recall the key idea from the chapter.",
+      }))
+      .filter((x) => x.question);
+  } catch {
+    return [];
+  }
+}
 
 export const getExerciseQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -461,30 +491,31 @@ export const getExerciseQuestions = createServerFn({ method: "POST" })
       subject: subjectSchema,
       chapter: chapterSchema,
       exercise: z.string().min(1).max(80),
+      expectedCount: z.number().int().min(1).max(60).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const m = await model();
     const isMisc = /misc/i.test(data.exercise);
+    const expected = Math.min(60, Math.max(1, data.expectedCount ?? 12));
+
     let questions: { question: string; hint: string }[] = [];
-    try {
-      const { text } = await generateText({
-        model: m,
-        prompt: `Return ONLY a JSON array (no markdown) of the textbook questions from NCERT Class ${data.grade} ${data.subject}, chapter "${data.chapter}", section "${data.exercise}"${isMisc ? " (the miscellaneous exercise — usually mixed/advanced questions)" : ""}. Use the actual textbook questions when known; otherwise create faithful NCERT-style questions. Each item: {"question":"Full question text","hint":"One short hint"}. 6 to 12 items. Plain text only (no LaTeX delimiters).`,
+    // Try up to 3 passes to fetch the full set (initial + up to 2 continuations).
+    for (let attempt = 0; attempt < 3 && questions.length < expected; attempt++) {
+      const batch = await fetchExerciseQuestionsBatch(m, data, {
+        expected,
+        startFrom: questions.length,
+        isMisc,
       });
-      const arr = safeJsonArray(text) ?? [];
-      questions = arr
-        .map((it: any) => ({
-          question: String(it?.question ?? it?.q ?? "").trim(),
-          hint: String(it?.hint ?? "").trim() || "Recall the key idea from the chapter.",
-        }))
-        .filter((x) => x.question)
-        .slice(0, 12);
-    } catch {
-      questions = [];
+      if (batch.length === 0) break;
+      questions = questions.concat(batch);
     }
+    // Trim any overflow so numbering stays accurate.
+    if (questions.length > expected) questions = questions.slice(0, expected);
+
+    // Last-resort fallback so students never see an empty exercise.
     if (questions.length === 0) {
-      questions = Array.from({ length: 6 }, (_, i) => ({
+      questions = Array.from({ length: expected }, (_, i) => ({
         question: `Question ${i + 1} from ${data.exercise} of "${data.chapter}".`,
         hint: "Refer to the chapter's key concepts.",
       }));
@@ -500,8 +531,14 @@ export const getExerciseQuestions = createServerFn({ method: "POST" })
       .eq("chapter", data.chapter)
       .eq("exercise", data.exercise);
     const completed = new Set((prog ?? []).map((r: any) => r.question_index));
-    return { questions, completed: Array.from(completed) as number[] };
+    return {
+      questions,
+      completed: Array.from(completed) as number[],
+      expected,
+      complete: questions.length >= expected,
+    };
   });
+
 
 export const getExerciseSolution = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
