@@ -32,6 +32,7 @@ const searchSchema = z.object({
   subject: z.string().min(1),
   chapter: z.string().min(1),
   exercise: z.string().optional(),
+  expectedCount: z.coerce.number().int().min(1).max(60).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/exercises")({
@@ -44,13 +45,14 @@ export const Route = createFileRoute("/_authenticated/exercises")({
 });
 
 function ExercisesPage() {
-  const { grade, subject, chapter, exercise } = Route.useSearch();
+  const { grade, subject, chapter, exercise, expectedCount } = Route.useSearch();
   return exercise ? (
-    <ExerciseDetail grade={grade} subject={subject} chapter={chapter} exercise={exercise} />
+    <ExerciseDetail grade={grade} subject={subject} chapter={chapter} exercise={exercise} expectedCount={expectedCount} />
   ) : (
     <ExerciseList grade={grade} subject={subject} chapter={chapter} />
   );
 }
+
 
 function ExerciseList({
   grade,
