@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Sparkles, Building2, Quote, Target, Heart } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import founderAsset from "@/assets/founder.png.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
 
@@ -12,17 +10,6 @@ export const Route = createFileRoute("/_authenticated/about")({
 });
 
 function AboutPage() {
-  const { data: avatarUrl } = useQuery({
-    queryKey: ["about-founder-avatar"],
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u.user?.id;
-      if (!uid) return null;
-      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", uid).maybeSingle();
-      return data?.avatar_url ?? null;
-    },
-    staleTime: 30_000,
-  });
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-5 pb-24 space-y-8">
