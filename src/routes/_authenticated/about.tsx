@@ -118,7 +118,7 @@ function AboutPage() {
         <Card className="p-6 rounded-2xl border border-border/80 flex flex-col items-center text-center gap-4">
           <div className="size-28 rounded-full overflow-hidden border-4 border-primary/30 shadow-md bg-primary/5">
             <img
-              src={avatarUrl ?? founderAsset.url}
+              src={founderAsset.url}
               alt="Imtiaz Ahmed — Founder"
               className="w-full h-full object-cover"
               style={{ objectPosition: "center 20%" }}
