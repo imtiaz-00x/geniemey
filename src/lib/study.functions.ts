@@ -626,3 +626,116 @@ export const getChapterExerciseProgress = createServerFn({ method: "POST" })
     return { byExercise };
   });
 
+
+// ---------------------------------------------------------------------------
+// Syllabus-based study notes & concept explanations (NCERT-first, low-hallucination)
+// ---------------------------------------------------------------------------
+
+const GROUNDING = `ACCURACY RULES (must follow):
+- Use NCERT textbook content as the PRIMARY and preferred source. Prefer NCERT definitions, NCERT terminology, NCERT symbols, NCERT units and NCERT worked-example style over any other book.
+- Only state facts you are confident are in the NCERT syllabus for the given class/subject. Never invent data, dates, constants, statistics, page numbers, exercise numbers, author names or "NCERT says" quotations.
+- If something is outside NCERT but needed for the exam, put it under a clearly marked "Beyond NCERT (exam extra)" bullet.
+- If you are unsure about a fact, write "Not specified in NCERT" instead of guessing.
+- Do not fabricate previous-year-question years or paper names. Speak in general terms ("commonly asked") instead.
+- Keep every number, formula and unit checkable and standard. Show units in every numeric answer.
+- Write in clean Markdown. Use $...$ / $$...$$ only for real mathematics; keep ordinary sentences as plain text.`;
+
+function syllabusHeader(p: {
+  grade: number;
+  subject: string;
+  chapter?: string;
+  examTrack?: string;
+}) {
+  const scope = p.chapter?.trim() ? `the chapter/topic "${p.chapter.trim()}"` : `the core syllabus of ${p.subject}`;
+  return p.examTrack
+    ? `You are preparing an Indian student for the ${p.examTrack} exam. Target level: Class ${p.grade} ${p.subject}. Scope: ${scope}. Map the content to the ${p.examTrack} syllabus, but build it on the NCERT Class ${p.grade} ${p.subject} textbook.`
+    : `You are teaching an Indian Class ${p.grade} student. Subject: ${p.subject}. Scope: ${scope}, based on the NCERT Class ${p.grade} ${p.subject} textbook.`;
+}
+
+export const generateStudyNotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        grade: gradeSchema,
+        subject: subjectSchema,
+        chapter: z.string().max(160).optional(),
+        examTrack: z.string().max(60).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const { text } = await generateText({
+      model: m,
+      prompt: `${syllabusHeader(data)}
+
+Write well-organised, syllabus-based STUDY NOTES.
+
+${TONE}
+
+${GROUNDING}
+
+Use exactly this Markdown structure and keep every section short and scannable:
+
+# ${data.chapter?.trim() || data.subject} — Study Notes
+**Syllabus scope:** one line naming the NCERT chapter(s) this maps to${data.examTrack ? ` and how ${data.examTrack} asks it` : ""}.
+
+## 1. Big Picture (why this chapter matters, 3 lines)
+## 2. Core Concepts (4-7 bullets, each **term** — one-line NCERT definition)
+## 3. Key Formulas & Definitions (markdown table: Formula | Meaning | Units)
+## 4. NCERT Highlights (the exact points NCERT emphasises, 4-6 bullets)
+## 5. Worked Example (one NCERT-style solved problem, numbered steps)
+## 6. Exam Focus${data.examTrack ? ` — ${data.examTrack}` : ""} (what is commonly asked, 4 bullets)
+## 7. Beyond NCERT (exam extra) (only if truly needed, else write "Nothing extra needed.")
+## 8. Common Mistakes (4 bullets)
+## 9. 30-Second Revision (5 crisp bullets)
+
+Target 700-900 words. No preamble, start directly with the heading.`,
+      providerOptions: { lovable: { reasoningEffort: "none" } },
+    });
+    return { notes: text };
+  });
+
+export const explainConcept = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        grade: gradeSchema,
+        subject: subjectSchema,
+        chapter: z.string().max(160).optional(),
+        concept: z.string().min(2).max(200),
+        examTrack: z.string().max(60).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const { text } = await generateText({
+      model: m,
+      prompt: `${syllabusHeader(data)}
+
+Give a DETAILED CONCEPT EXPLANATION of: "${data.concept}".
+
+${TONE}
+
+${GROUNDING}
+
+Use exactly this Markdown structure:
+
+# ${data.concept}
+## In One Line (the NCERT definition, simply worded)
+## Build-Up (explain from zero, 4-6 short steps, everyday analogy first)
+## The Idea in Math / Symbols (formulas with each symbol explained; skip if not a math-type concept)
+## Visual (small ASCII diagram or markdown table that makes it click)
+## Solved Example (one full step-by-step problem with units)
+## Where It Is Used (2-3 real-life or NCERT applications)
+## Confusions Cleared (3 "students think X, but actually Y" bullets)
+## Quick Check (3 short questions with one-line answers)
+
+Target 500-750 words. Start directly with the heading.`,
+      providerOptions: { lovable: { reasoningEffort: "none" } },
+    });
+    return { explanation: text };
+  });
