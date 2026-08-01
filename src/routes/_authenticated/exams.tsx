@@ -2,10 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { generateQuiz, submitQuiz, EXAM_TRACKS } from "@/lib/study.functions";
+import {
+  generateQuiz,
+  submitQuiz,
+  generateStudyNotes,
+  explainConcept,
+  EXAM_TRACKS,
+} from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StudyMarkdown } from "@/components/study-markdown";
 import {
   Loader2, Trophy, ListChecks, Layers, CheckCircle2, XCircle, RotateCcw,
   FileQuestion, AlertCircle, Search, ArrowLeft, Sparkles, BookOpen, Target,
