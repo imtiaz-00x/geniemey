@@ -130,8 +130,30 @@ function wrapInlineMath(text: string): string {
 // Skip code blocks, inline code, and already-delimited math.
 const PROTECTED_RE = /(```[\s\S]*?```|`[^`\n]*`|\$\$[\s\S]*?\$\$|\$[^$\n]+?\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g;
 
+// Repair artifacts already present in stored/generated content.
+function repairArtifacts(md: string): string {
+  let s = md;
+  // \binom{the}{enter}, \binom{the}{M}... -> plain words again
+  s = s.replace(/\\binom\{([A-Za-z]{2,})\}\{([A-Za-z]*)\}/g, (_, a: string, b: string) => {
+    if (/^the$/i.test(a)) return `${a} C${b}`;
+    return `${a} C${b}`;
+  });
+  s = s.replace(/\bthe\s+Center of Mass\b/g, "the Center of Mass");
+  s = s.replace(/\bthe\s+Center\b/g, "the Center");
+  // stray literal \cdot runs used as word separators
+  s = s.replace(/(?:\s*\\cdot\s*){2,}/g, " ");
+  s = s.replace(/(?<![\w)\]}])\s*\\cdot\s*(?![\w(])/g, " ");
+  // stray bold markers / lone dollar signs surviving as literal characters
+  s = s.replace(/\*{2,}(?=\s|$)/g, "").replace(/(?:^|\s)\*{2,}(?=\s)/g, " ");
+  const dollars = (s.match(/\$/g) ?? []).length;
+  if (dollars % 2 === 1) s = s.replace(/\$/g, "");
+  return s;
+}
+
 export function normalizeMath(md: string): string {
   if (!md) return md;
+  md = repairArtifacts(md);
+
   const out: string[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
