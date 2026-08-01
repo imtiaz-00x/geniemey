@@ -38,29 +38,33 @@ function plainToLatex(input: string): string {
   s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*P\s*_?([A-Za-z]|\d+)(?![A-Za-z0-9])/g, "{}^{$1}P_{$2}");
 
 
-  // 1) Function calls — handle balanced parens, recursively.
+  // 1) Function calls — handle balanced parens, recursively (single left-to-right pass).
   //    sqrt(x+1) -> \sqrt{x+1},   sin(x) -> \sin(x)
   const funcRe = new RegExp(`\\b(${FUNCS.join("|")})\\s*\\(`, "g");
-  let prev = "";
-  let guard = 0;
-  while (prev !== s && guard++ < 8) {
-    prev = s;
-    s = s.replace(funcRe, (match, name, offset: number) => {
-      const openIdx = offset + match.length - 1;
-      const closeIdx = balancedParen(s, openIdx);
-      if (closeIdx < 0) return match;
-      const inner = s.slice(openIdx + 1, closeIdx);
-      const innerLtx = plainToLatex(inner);
-      const after = s.slice(closeIdx + 1);
-      let replacement: string;
-      if (name === "sqrt") replacement = `\\sqrt{${innerLtx}}`;
-      else if (name === "abs") replacement = `\\left|${innerLtx}\\right|`;
-      else replacement = `\\${name}\\left(${innerLtx}\\right)`;
-      // Splice into s so subsequent iterations see the rewritten text
-      s = s.slice(0, offset) + replacement + after;
-      return replacement;
-    });
+  let out = "";
+  let cursor = 0;
+  let mm: RegExpExecArray | null;
+  funcRe.lastIndex = 0;
+  while ((mm = funcRe.exec(s)) !== null) {
+    const start = mm.index;
+    if (start < cursor) continue;
+    const openIdx = start + mm[0].length - 1;
+    const closeIdx = balancedParen(s, openIdx);
+    if (closeIdx < 0) continue;
+    const name = mm[1];
+    const innerLtx = plainToLatex(s.slice(openIdx + 1, closeIdx));
+    const replacement =
+      name === "sqrt"
+        ? `\\sqrt{${innerLtx}}`
+        : name === "abs"
+          ? `\\left|${innerLtx}\\right|`
+          : `\\${name}\\left(${innerLtx}\\right)`;
+    out += s.slice(cursor, start) + replacement;
+    cursor = closeIdx + 1;
+    funcRe.lastIndex = cursor;
   }
+  s = out + s.slice(cursor);
+
 
   // 2) Exponents:  x^2 -> x^{2},  x^(n+1) -> x^{n+1},  x^-3 -> x^{-3}
   s = s.replace(/\^\(([^()]+)\)/g, "^{$1}");
