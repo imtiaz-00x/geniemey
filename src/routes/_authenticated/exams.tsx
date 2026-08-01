@@ -2,10 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { generateQuiz, submitQuiz, EXAM_TRACKS } from "@/lib/study.functions";
+import {
+  generateQuiz,
+  submitQuiz,
+  generateStudyNotes,
+  explainConcept,
+  EXAM_TRACKS,
+} from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StudyMarkdown } from "@/components/study-markdown";
 import {
   Loader2, Trophy, ListChecks, Layers, CheckCircle2, XCircle, RotateCcw,
   FileQuestion, AlertCircle, Search, ArrowLeft, Sparkles, BookOpen, Target,
@@ -70,6 +77,9 @@ const FEATURES = [
 function ExamsPage() {
   const genQ = useServerFn(generateQuiz);
   const subQ = useServerFn(submitQuiz);
+  const notesFn = useServerFn(generateStudyNotes);
+  const explainFn = useServerFn(explainConcept);
+
 
   const [track, setTrack] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -77,6 +87,8 @@ function ExamsPage() {
   const [subject, setSubject] = useState<string>("General Studies");
   const [chapter, setChapter] = useState("");
   const [mode, setMode] = useState<"exam" | "series">("exam");
+  const [concept, setConcept] = useState("");
+  const [study, setStudy] = useState<{ title: string; md: string } | null>(null);
 
   const [attempt, setAttempt] = useState<{ id: string; questions: Question[] } | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -129,6 +141,42 @@ function ExamsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const notesMut = useMutation({
+    mutationFn: async () =>
+      notesFn({
+        data: {
+          grade,
+          subject,
+          chapter: chapter.trim() || undefined,
+          examTrack: track ?? undefined,
+        },
+      }),
+    onSuccess: (d) =>
+      setStudy({
+        title: `Study Notes · ${chapter.trim() || subject}`,
+        md: d.notes,
+      }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const explainMut = useMutation({
+    mutationFn: async () => {
+      const c = concept.trim();
+      if (!c) throw new Error("Type a concept to explain.");
+      return explainFn({
+        data: {
+          grade,
+          subject,
+          chapter: chapter.trim() || undefined,
+          concept: c,
+          examTrack: track ?? undefined,
+        },
+      });
+    },
+    onSuccess: (d) => setStudy({ title: `Concept · ${concept.trim()}`, md: d.explanation }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function resetAttempt() {
     setAttempt(null);
     setAnswers([]);
@@ -140,7 +188,10 @@ function ExamsPage() {
     resetAttempt();
     setTrack(null);
     setChapter("");
+    setConcept("");
+    setStudy(null);
   }
+
 
   // ============ EXAM PICKER ============
   if (!track) {
@@ -310,6 +361,82 @@ function ExamsPage() {
               className="h-11"
             />
           </section>
+
+          <Card className="p-4 rounded-2xl space-y-3">
+            <div className="flex items-start gap-2">
+              <span className="size-9 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
+                <BookOpen className="size-4" />
+              </span>
+              <div>
+                <p className="font-semibold text-sm leading-tight">Learn before you test</p>
+                <p className="text-xs text-muted-foreground">
+                  NCERT-first notes and concept explanations for {track} · Class {grade} ·{" "}
+                  {subject}
+                  {chapter.trim() && ` · ${chapter.trim()}`}.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="secondary"
+              onClick={() => notesMut.mutate()}
+              disabled={notesMut.isPending}
+              className="w-full h-11 rounded-full"
+            >
+              {notesMut.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin mr-2" /> Writing NCERT-based notes…
+                </>
+              ) : (
+                <>
+                  <NotebookPen className="size-4 mr-2" /> Generate Study Notes
+                </>
+              )}
+            </Button>
+
+            <div className="flex gap-2">
+              <Input
+                value={concept}
+                onChange={(e) => setConcept(e.target.value)}
+                placeholder="Explain a concept (e.g. Ohm's Law)…"
+                className="h-11"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && concept.trim()) explainMut.mutate();
+                }}
+              />
+              <Button
+                variant="outline"
+                onClick={() => explainMut.mutate()}
+                disabled={explainMut.isPending || !concept.trim()}
+                className="h-11 rounded-full shrink-0"
+              >
+                {explainMut.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Brain className="size-4" />
+                )}
+                <span className="ml-1.5 hidden sm:inline">Explain</span>
+              </Button>
+            </div>
+
+            {study && (
+              <div className="rounded-xl border border-border bg-background p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-muted-foreground truncate">
+                    {study.title}
+                  </p>
+                  <button
+                    onClick={() => setStudy(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                  >
+                    Close
+                  </button>
+                </div>
+                <StudyMarkdown collapseAt={100000}>{study.md}</StudyMarkdown>
+              </div>
+            )}
+          </Card>
+
 
           <section className="grid sm:grid-cols-2 gap-3">
             <button
