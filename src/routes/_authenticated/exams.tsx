@@ -77,6 +77,9 @@ const FEATURES = [
 function ExamsPage() {
   const genQ = useServerFn(generateQuiz);
   const subQ = useServerFn(submitQuiz);
+  const notesFn = useServerFn(generateStudyNotes);
+  const explainFn = useServerFn(explainConcept);
+
 
   const [track, setTrack] = useState<string | null>(null);
   const [query, setQuery] = useState("");
