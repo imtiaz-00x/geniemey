@@ -30,35 +30,41 @@ const FUNCS = ["sqrt", "sin", "cos", "tan", "cot", "sec", "csc", "log", "ln", "e
 function plainToLatex(input: string): string {
   let s = input;
 
-  // 0) Binomial coefficients: nCr, 5C2, ^nC_r, nC(r+1) -> \binom{n}{r}
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?\(([^()]+)\)/g, "\\binom{$1}{$2}");
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?([A-Za-z0-9]+)/g, "\\binom{$1}{$2}");
+  // 0) Binomial coefficients — ONLY for compact tokens like 5C2, nC2, nC(r+1).
+  //    Never for English words ("the Center", "of Conservation").
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*C\s*_?\(([^()]+)\)/g, "\\binom{$1}{$2}");
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*C\s*_?([A-Za-z]|\d+)(?![A-Za-z0-9])/g, "\\binom{$1}{$2}");
   // Permutations: nPr -> P^{n}_{r}
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*P\s*_?([A-Za-z0-9]+)/g, "{}^{$1}P_{$2}");
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*P\s*_?([A-Za-z]|\d+)(?![A-Za-z0-9])/g, "{}^{$1}P_{$2}");
 
-  // 1) Function calls — handle balanced parens, recursively.
+
+  // 1) Function calls — handle balanced parens, recursively (single left-to-right pass).
   //    sqrt(x+1) -> \sqrt{x+1},   sin(x) -> \sin(x)
   const funcRe = new RegExp(`\\b(${FUNCS.join("|")})\\s*\\(`, "g");
-  let prev = "";
-  let guard = 0;
-  while (prev !== s && guard++ < 8) {
-    prev = s;
-    s = s.replace(funcRe, (match, name, offset: number) => {
-      const openIdx = offset + match.length - 1;
-      const closeIdx = balancedParen(s, openIdx);
-      if (closeIdx < 0) return match;
-      const inner = s.slice(openIdx + 1, closeIdx);
-      const innerLtx = plainToLatex(inner);
-      const after = s.slice(closeIdx + 1);
-      let replacement: string;
-      if (name === "sqrt") replacement = `\\sqrt{${innerLtx}}`;
-      else if (name === "abs") replacement = `\\left|${innerLtx}\\right|`;
-      else replacement = `\\${name}\\left(${innerLtx}\\right)`;
-      // Splice into s so subsequent iterations see the rewritten text
-      s = s.slice(0, offset) + replacement + after;
-      return replacement;
-    });
+  let out = "";
+  let cursor = 0;
+  let mm: RegExpExecArray | null;
+  funcRe.lastIndex = 0;
+  while ((mm = funcRe.exec(s)) !== null) {
+    const start = mm.index;
+    if (start < cursor) continue;
+    const openIdx = start + mm[0].length - 1;
+    const closeIdx = balancedParen(s, openIdx);
+    if (closeIdx < 0) continue;
+    const name = mm[1];
+    const innerLtx = plainToLatex(s.slice(openIdx + 1, closeIdx));
+    const replacement =
+      name === "sqrt"
+        ? `\\sqrt{${innerLtx}}`
+        : name === "abs"
+          ? `\\left|${innerLtx}\\right|`
+          : `\\${name}\\left(${innerLtx}\\right)`;
+    out += s.slice(cursor, start) + replacement;
+    cursor = closeIdx + 1;
+    funcRe.lastIndex = cursor;
   }
+  s = out + s.slice(cursor);
+
 
   // 2) Exponents:  x^2 -> x^{2},  x^(n+1) -> x^{n+1},  x^-3 -> x^{-3}
   s = s.replace(/\^\(([^()]+)\)/g, "^{$1}");
@@ -72,7 +78,8 @@ function plainToLatex(input: string): string {
   s = s.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
   s = s.replace(/(?<![A-Za-z0-9_}])(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)(?![A-Za-z0-9_])/g, "\\frac{$1}{$2}");
 
-  // 5) Multiplication & operators
+  // 5) Multiplication & operators — drop markdown bold markers, never emit them as \cdot
+  s = s.replace(/\*{2,}/g, "");
   s = s.replace(/\*/g, " \\cdot ");
   s = s.replace(/<=/g, "\\leq ").replace(/>=/g, "\\geq ").replace(/!=/g, "\\neq ");
   s = s.replace(/\+\-/g, "\\pm ").replace(/-\+/g, "\\mp ");
@@ -97,33 +104,70 @@ const TRIGGER_RE = new RegExp(
   // chunk = run of math-ish chars containing at least one trigger
   `(?<![\\w$])` +
     `(?=[A-Za-z0-9(\\\\.\\-+])` +
-    `[A-Za-z0-9_+\\-*/^().,!=<>\\s]*?` +
+    `[A-Za-z0-9_+\\-*/^().,!=<>]*?` +
     `(?:` +
-      `\\b(?:${FUNCS.join("|")})\\s*\\([^)]*\\)` +
-      `|[A-Za-z0-9)]\\s*\\^\\s*[A-Za-z0-9(\\-]` +
-      `|\\b[A-Za-z0-9]+\\s*[CP]\\s*[A-Za-z0-9(]` +
-      `|\\([^()]+\\)\\s*\\/\\s*\\([^()]+\\)` +
+      `\\b(?:${FUNCS.join("|")})\\([^)]*\\)` +
+      `|[A-Za-z0-9)]\\^[A-Za-z0-9(\\-]` +
+      `|(?<![A-Za-z0-9])(?:[A-Za-z]|\\d+)[CP](?:[A-Za-z]|\\d+)(?![A-Za-z0-9])` +
+      `|\\((?:[^()]|\\([^()]*\\))+\\)\\/\\((?:[^()]|\\([^()]*\\))+\\)` +
     `)` +
-    `[A-Za-z0-9_+\\-*/^().,!=<>\\s]*?` +
-    `(?=[\\s.,;:!?)]|$)`,
+    `[A-Za-z0-9_+\\-*/^().,!=<>]*?` +
+    `(?=[\\s.,;:!?]|$)`,
   "g",
 );
 
+// Words of 3+ letters that aren't math function names mean this is prose, not an equation.
+const PROSE_WORD_RE = new RegExp(`\\b(?!(?:${FUNCS.join("|")})\\b)[A-Za-z]{3,}\\b`);
+
 function wrapInlineMath(text: string): string {
   return text.replace(TRIGGER_RE, (match) => {
-    const trimmed = match.trim();
+    let trimmed = match.trim();
+    if (!trimmed) return match;
+    // Never turn ordinary sentences into math — that mangles spacing and words.
+    if (PROSE_WORD_RE.test(trimmed)) return match;
+    // Don't swallow a sentence's closing paren into the equation.
+    let tail = "";
+    while (
+      trimmed.endsWith(")") &&
+      (trimmed.match(/\(/g) ?? []).length < (trimmed.match(/\)/g) ?? []).length
+    ) {
+      trimmed = trimmed.slice(0, -1);
+      tail = ")" + tail;
+    }
     if (!trimmed) return match;
     const leading = match.slice(0, match.length - match.trimStart().length);
     const trailing = match.slice(match.trimEnd().length);
-    return `${leading}$${plainToLatex(trimmed)}$${trailing}`;
+    return `${leading}$${plainToLatex(trimmed)}$${tail}${trailing}`;
   });
 }
 
 // Skip code blocks, inline code, and already-delimited math.
 const PROTECTED_RE = /(```[\s\S]*?```|`[^`\n]*`|\$\$[\s\S]*?\$\$|\$[^$\n]+?\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g;
 
+// Repair artifacts already present in stored/generated content.
+function repairArtifacts(md: string): string {
+  let s = md;
+  // \binom{the}{enter}, \binom{the}{M}... -> plain words again
+  s = s.replace(/\\binom\{([A-Za-z]{2,})\}\{([A-Za-z]*)\}/g, (_, a: string, b: string) => {
+    if (/^the$/i.test(a) && b === "M") return `${a} Center of Mass`;
+    return `${a} C${b}`;
+  });
+  s = s.replace(/\bthe\s+Center of Mass\b/g, "the Center of Mass");
+  s = s.replace(/\bthe\s+Center\b/g, "the Center");
+  // stray literal \cdot runs used as word separators
+  s = s.replace(/(?:\s*\\cdot\s*){2,}/g, " ");
+  s = s.replace(/(?<![\w)\]}])\s*\\cdot\s*(?![\w(])/g, " ");
+  // stray bold markers / lone dollar signs surviving as literal characters
+  s = s.replace(/(^|\s)\*{2,}(?=\s|$)/g, "$1");
+  const dollars = (s.match(/\$/g) ?? []).length;
+  if (dollars % 2 === 1) s = s.replace(/\$/g, "");
+  return s;
+}
+
 export function normalizeMath(md: string): string {
   if (!md) return md;
+  md = repairArtifacts(md);
+
   const out: string[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
