@@ -135,7 +135,7 @@ function repairArtifacts(md: string): string {
   let s = md;
   // \binom{the}{enter}, \binom{the}{M}... -> plain words again
   s = s.replace(/\\binom\{([A-Za-z]{2,})\}\{([A-Za-z]*)\}/g, (_, a: string, b: string) => {
-    if (/^the$/i.test(a)) return `${a} C${b}`;
+    if (/^the$/i.test(a) && b === "M") return `${a} Center of Mass`;
     return `${a} C${b}`;
   });
   s = s.replace(/\bthe\s+Center of Mass\b/g, "the Center of Mass");
