@@ -30,11 +30,13 @@ const FUNCS = ["sqrt", "sin", "cos", "tan", "cot", "sec", "csc", "log", "ln", "e
 function plainToLatex(input: string): string {
   let s = input;
 
-  // 0) Binomial coefficients: nCr, 5C2, ^nC_r, nC(r+1) -> \binom{n}{r}
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?\(([^()]+)\)/g, "\\binom{$1}{$2}");
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*C\s*_?([A-Za-z0-9]+)/g, "\\binom{$1}{$2}");
+  // 0) Binomial coefficients — ONLY for compact tokens like 5C2, nC2, nC(r+1).
+  //    Never for English words ("the Center", "of Conservation").
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*C\s*_?\(([^()]+)\)/g, "\\binom{$1}{$2}");
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*C\s*_?([A-Za-z]|\d+)(?![A-Za-z0-9])/g, "\\binom{$1}{$2}");
   // Permutations: nPr -> P^{n}_{r}
-  s = s.replace(/\^?([A-Za-z0-9]+)\s*P\s*_?([A-Za-z0-9]+)/g, "{}^{$1}P_{$2}");
+  s = s.replace(/(?<![A-Za-z0-9])\^?([A-Za-z]|\d+)\s*P\s*_?([A-Za-z]|\d+)(?![A-Za-z0-9])/g, "{}^{$1}P_{$2}");
+
 
   // 1) Function calls — handle balanced parens, recursively.
   //    sqrt(x+1) -> \sqrt{x+1},   sin(x) -> \sin(x)
