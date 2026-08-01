@@ -74,7 +74,8 @@ function plainToLatex(input: string): string {
   s = s.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, "\\frac{$1}{$2}");
   s = s.replace(/(?<![A-Za-z0-9_}])(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)(?![A-Za-z0-9_])/g, "\\frac{$1}{$2}");
 
-  // 5) Multiplication & operators
+  // 5) Multiplication & operators — drop markdown bold markers, never emit them as \cdot
+  s = s.replace(/\*{2,}/g, "");
   s = s.replace(/\*/g, " \\cdot ");
   s = s.replace(/<=/g, "\\leq ").replace(/>=/g, "\\geq ").replace(/!=/g, "\\neq ");
   s = s.replace(/\+\-/g, "\\pm ").replace(/-\+/g, "\\mp ");
