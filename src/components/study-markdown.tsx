@@ -158,7 +158,7 @@ function repairArtifacts(md: string): string {
   s = s.replace(/(?:\s*\\cdot\s*){2,}/g, " ");
   s = s.replace(/(?<![\w)\]}])\s*\\cdot\s*(?![\w(])/g, " ");
   // stray bold markers / lone dollar signs surviving as literal characters
-  s = s.replace(/\*{2,}(?=\s|$)/g, "").replace(/(?:^|\s)\*{2,}(?=\s)/g, " ");
+  s = s.replace(/(^|\s)\*{2,}(?=\s|$)/g, "$1");
   const dollars = (s.match(/\$/g) ?? []).length;
   if (dollars % 2 === 1) s = s.replace(/\$/g, "");
   return s;
