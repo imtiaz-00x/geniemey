@@ -141,6 +141,42 @@ function ExamsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const notesMut = useMutation({
+    mutationFn: async () =>
+      notesFn({
+        data: {
+          grade,
+          subject,
+          chapter: chapter.trim() || undefined,
+          examTrack: track ?? undefined,
+        },
+      }),
+    onSuccess: (d) =>
+      setStudy({
+        title: `Study Notes · ${chapter.trim() || subject}`,
+        md: d.notes,
+      }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const explainMut = useMutation({
+    mutationFn: async () => {
+      const c = concept.trim();
+      if (!c) throw new Error("Type a concept to explain.");
+      return explainFn({
+        data: {
+          grade,
+          subject,
+          chapter: chapter.trim() || undefined,
+          concept: c,
+          examTrack: track ?? undefined,
+        },
+      });
+    },
+    onSuccess: (d) => setStudy({ title: `Concept · ${concept.trim()}`, md: d.explanation }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function resetAttempt() {
     setAttempt(null);
     setAnswers([]);
@@ -152,7 +188,10 @@ function ExamsPage() {
     resetAttempt();
     setTrack(null);
     setChapter("");
+    setConcept("");
+    setStudy(null);
   }
+
 
   // ============ EXAM PICKER ============
   if (!track) {
