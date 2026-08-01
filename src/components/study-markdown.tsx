@@ -104,7 +104,7 @@ const TRIGGER_RE = new RegExp(
     `(?:` +
       `\\b(?:${FUNCS.join("|")})\\s*\\([^)]*\\)` +
       `|[A-Za-z0-9)]\\s*\\^\\s*[A-Za-z0-9(\\-]` +
-      `|\\b[A-Za-z0-9]+\\s*[CP]\\s*[A-Za-z0-9(]` +
+      `|(?<![A-Za-z0-9])(?:[A-Za-z]|\\d+)\\s*[CP]\\s*(?:[A-Za-z]|\\d+)(?![A-Za-z0-9])` +
       `|\\([^()]+\\)\\s*\\/\\s*\\([^()]+\\)` +
     `)` +
     `[A-Za-z0-9_+\\-*/^().,!=<>\\s]*?` +
@@ -112,10 +112,15 @@ const TRIGGER_RE = new RegExp(
   "g",
 );
 
+// Words of 3+ letters that aren't math function names mean this is prose, not an equation.
+const PROSE_WORD_RE = new RegExp(`\\b(?!(?:${FUNCS.join("|")})\\b)[A-Za-z]{3,}\\b`);
+
 function wrapInlineMath(text: string): string {
   return text.replace(TRIGGER_RE, (match) => {
     const trimmed = match.trim();
     if (!trimmed) return match;
+    // Never turn ordinary sentences into math — that mangles spacing and words.
+    if (PROSE_WORD_RE.test(trimmed)) return match;
     const leading = match.slice(0, match.length - match.trimStart().length);
     const trailing = match.slice(match.trimEnd().length);
     return `${leading}$${plainToLatex(trimmed)}$${trailing}`;
