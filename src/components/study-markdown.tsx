@@ -121,13 +121,23 @@ const PROSE_WORD_RE = new RegExp(`\\b(?!(?:${FUNCS.join("|")})\\b)[A-Za-z]{3,}\\
 
 function wrapInlineMath(text: string): string {
   return text.replace(TRIGGER_RE, (match) => {
-    const trimmed = match.trim();
+    let trimmed = match.trim();
     if (!trimmed) return match;
     // Never turn ordinary sentences into math — that mangles spacing and words.
     if (PROSE_WORD_RE.test(trimmed)) return match;
+    // Don't swallow a sentence's closing paren into the equation.
+    let tail = "";
+    while (
+      trimmed.endsWith(")") &&
+      (trimmed.match(/\(/g) ?? []).length < (trimmed.match(/\)/g) ?? []).length
+    ) {
+      trimmed = trimmed.slice(0, -1);
+      tail = ")" + tail;
+    }
+    if (!trimmed) return match;
     const leading = match.slice(0, match.length - match.trimStart().length);
     const trailing = match.slice(match.trimEnd().length);
-    return `${leading}$${plainToLatex(trimmed)}$${trailing}`;
+    return `${leading}$${plainToLatex(trimmed)}$${tail}${trailing}`;
   });
 }
 
