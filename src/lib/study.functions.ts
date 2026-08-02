@@ -739,3 +739,65 @@ Target 500-750 words. Start directly with the heading.`,
     });
     return { explanation: text };
   });
+
+// ---------------------------------------------------------------------------
+// Flashcards (spaced repetition) generated from study notes / explanations
+// ---------------------------------------------------------------------------
+
+export const generateFlashcards = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        source: z.string().min(20).max(20000),
+        title: z.string().max(200).optional(),
+        count: z.number().int().min(5).max(30).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const m = await model();
+    const count = data.count ?? 14;
+    const build = async (extra = "") => {
+      const { text } = await generateText({
+        model: m,
+        prompt: `Turn the study material below into ${count} spaced-repetition flashcards.
+
+${GROUNDING}
+
+Rules for cards:
+- One idea per card. Front = a short question/prompt (max 120 chars). Back = a crisp answer (max 240 chars).
+- Cover definitions, formulas (with units), key facts, and one or two "apply it" cards.
+- Never invent content that is not supported by the material.
+- Order easiest first.
+
+Return ONLY a JSON array, no markdown fence, no commentary:
+[{"front":"...","back":"...","tag":"definition|formula|fact|apply"}]
+${extra}
+
+STUDY MATERIAL:
+"""
+${data.source.slice(0, 16000)}
+"""`,
+        providerOptions: { lovable: { reasoningEffort: "none" } },
+      });
+      return safeJsonArray(text);
+    };
+
+    let arr = await build();
+    if (!arr || arr.length === 0) arr = await build("\nReturn strictly valid JSON only.");
+
+    const cards = (arr ?? [])
+      .map((c: any) => ({
+        front: String(c?.front ?? "").trim(),
+        back: String(c?.back ?? "").trim(),
+        tag: ["definition", "formula", "fact", "apply"].includes(String(c?.tag))
+          ? String(c.tag)
+          : "fact",
+      }))
+      .filter((c) => c.front && c.back)
+      .slice(0, count);
+
+    if (cards.length === 0) throw new Error("Could not build flashcards. Try again.");
+    return { title: data.title ?? "Flashcards", cards };
+  });
