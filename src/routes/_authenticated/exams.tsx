@@ -7,12 +7,15 @@ import {
   submitQuiz,
   generateStudyNotes,
   explainConcept,
+  generateFlashcards,
   EXAM_TRACKS,
 } from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StudyMarkdown } from "@/components/study-markdown";
+import { FlashcardDeck, type Flashcard } from "@/components/flashcard-deck";
+
 import {
   Loader2, Trophy, ListChecks, Layers, CheckCircle2, XCircle, RotateCcw,
   FileQuestion, AlertCircle, Search, ArrowLeft, Sparkles, BookOpen, Target,
