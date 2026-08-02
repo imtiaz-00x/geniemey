@@ -92,6 +92,8 @@ function ExamsPage() {
   const [mode, setMode] = useState<"exam" | "series">("exam");
   const [concept, setConcept] = useState("");
   const [study, setStudy] = useState<{ title: string; md: string } | null>(null);
+  const [deck, setDeck] = useState<{ title: string; cards: Flashcard[] } | null>(null);
+
 
   const [attempt, setAttempt] = useState<{ id: string; questions: Question[] } | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
