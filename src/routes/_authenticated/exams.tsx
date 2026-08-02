@@ -82,6 +82,8 @@ function ExamsPage() {
   const subQ = useServerFn(submitQuiz);
   const notesFn = useServerFn(generateStudyNotes);
   const explainFn = useServerFn(explainConcept);
+  const cardsFn = useServerFn(generateFlashcards);
+
 
 
   const [track, setTrack] = useState<string | null>(null);
