@@ -7,12 +7,15 @@ import {
   submitQuiz,
   generateStudyNotes,
   explainConcept,
+  generateFlashcards,
   EXAM_TRACKS,
 } from "@/lib/study.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StudyMarkdown } from "@/components/study-markdown";
+import { FlashcardDeck, type Flashcard } from "@/components/flashcard-deck";
+
 import {
   Loader2, Trophy, ListChecks, Layers, CheckCircle2, XCircle, RotateCcw,
   FileQuestion, AlertCircle, Search, ArrowLeft, Sparkles, BookOpen, Target,
@@ -79,6 +82,8 @@ function ExamsPage() {
   const subQ = useServerFn(submitQuiz);
   const notesFn = useServerFn(generateStudyNotes);
   const explainFn = useServerFn(explainConcept);
+  const cardsFn = useServerFn(generateFlashcards);
+
 
 
   const [track, setTrack] = useState<string | null>(null);
@@ -89,6 +94,8 @@ function ExamsPage() {
   const [mode, setMode] = useState<"exam" | "series">("exam");
   const [concept, setConcept] = useState("");
   const [study, setStudy] = useState<{ title: string; md: string } | null>(null);
+  const [deck, setDeck] = useState<{ title: string; cards: Flashcard[] } | null>(null);
+
 
   const [attempt, setAttempt] = useState<{ id: string; questions: Question[] } | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -177,6 +184,17 @@ function ExamsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const cardsMut = useMutation({
+    mutationFn: async () => {
+      if (!study) throw new Error("Generate notes or an explanation first.");
+      return cardsFn({ data: { source: study.md, title: study.title } });
+    },
+    onSuccess: (d) => setDeck({ title: d.title, cards: d.cards as Flashcard[] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
+
   function resetAttempt() {
     setAttempt(null);
     setAnswers([]);
@@ -190,6 +208,8 @@ function ExamsPage() {
     setChapter("");
     setConcept("");
     setStudy(null);
+    setDeck(null);
+
   }
 
 
@@ -433,8 +453,26 @@ function ExamsPage() {
                   </button>
                 </div>
                 <StudyMarkdown collapseAt={100000}>{study.md}</StudyMarkdown>
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => cardsMut.mutate()}
+                  disabled={cardsMut.isPending}
+                >
+                  {cardsMut.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Layers className="size-4" />
+                  )}
+                  <span className="ml-1.5">Make Flashcards</span>
+                </Button>
               </div>
             )}
+
+            {deck && (
+              <FlashcardDeck title={deck.title} cards={deck.cards} onClose={() => setDeck(null)} />
+            )}
+
           </Card>
 
 
