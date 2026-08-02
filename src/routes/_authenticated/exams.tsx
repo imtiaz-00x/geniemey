@@ -182,6 +182,17 @@ function ExamsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const cardsMut = useMutation({
+    mutationFn: async () => {
+      if (!study) throw new Error("Generate notes or an explanation first.");
+      return cardsFn({ data: { source: study.md, title: study.title } });
+    },
+    onSuccess: (d) => setDeck({ title: d.title, cards: d.cards as Flashcard[] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
+
   function resetAttempt() {
     setAttempt(null);
     setAnswers([]);
