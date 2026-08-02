@@ -208,6 +208,8 @@ function ExamsPage() {
     setChapter("");
     setConcept("");
     setStudy(null);
+    setDeck(null);
+
   }
 
 
