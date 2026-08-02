@@ -438,8 +438,26 @@ function ExamsPage() {
                   </button>
                 </div>
                 <StudyMarkdown collapseAt={100000}>{study.md}</StudyMarkdown>
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => cardsMut.mutate()}
+                  disabled={cardsMut.isPending}
+                >
+                  {cardsMut.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Layers className="size-4" />
+                  )}
+                  <span className="ml-1.5">Make Flashcards</span>
+                </Button>
               </div>
             )}
+
+            {deck && (
+              <FlashcardDeck title={deck.title} cards={deck.cards} onClose={() => setDeck(null)} />
+            )}
+
           </Card>
 
 
