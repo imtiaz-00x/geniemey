@@ -210,7 +210,7 @@ function HomeworkPage() {
                 </>
               ) : (
                 <>
-                  <Sparkles className="size-4 mr-1.5" /> Ask GenieMey
+                  <Sparkles className="size-4 mr-1.5" /> Ask GenieMey AI
                 </>
               )}
             </Button>

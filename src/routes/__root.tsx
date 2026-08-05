@@ -77,17 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GenieMey — AI tutor for Math & Science (Grades 1-12)" },
+      { title: "GenieMey AI — AI tutor for Math & Science (Grades 1-12)" },
       {
         name: "description",
         content:
           "Learn Math and Science with AI-generated lessons, quizzes, and a personal tutor. NCERT-aligned with JEE/NEET prep.",
       },
-      { property: "og:title", content: "GenieMey — AI tutor for Math & Science (Grades 1-12)" },
+      { property: "og:title", content: "GenieMey AI — AI tutor for Math & Science (Grades 1-12)" },
       { property: "og:description", content: "Academic Ascent is a student-focused application designed for subject learning and academic achievement." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "GenieMey — AI tutor for Math & Science (Grades 1-12)" },
+      { name: "twitter:title", content: "GenieMey AI — AI tutor for Math & Science (Grades 1-12)" },
       { name: "description", content: "Academic Ascent is a student-focused application designed for subject learning and academic achievement." },
       { name: "twitter:description", content: "Academic Ascent is a student-focused application designed for subject learning and academic achievement." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4ff3fac9-8756-4f6f-bdaa-166ad4edc79c/id-preview-ad13aa4d--294f1353-8b16-4ff0-af33-2a254b46a009.lovable.app-1781687962946.png" },

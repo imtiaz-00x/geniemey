@@ -6,7 +6,7 @@ import { Flame, GraduationCap, Calculator, FlaskConical, Atom, Leaf, BookOpen, S
 export const Route = createFileRoute("/explore")({
   head: () => ({
     meta: [
-      { title: "Explore GenieMey — Free AI-powered learning" },
+      { title: "Explore GenieMey AI — Free AI-powered learning" },
       { name: "description", content: "Browse Math, Science, and NCERT topics as a guest. Sign in to save your XP, streak, and progress." },
     ],
   }),
@@ -30,7 +30,7 @@ function ExplorePage() {
             <div className="size-8 shrink-0 rounded-lg bg-primary text-primary-foreground grid place-items-center">
               <Flame className="size-4" />
             </div>
-            <span className="font-bold tracking-tight">GenieMey</span>
+            <span className="font-bold tracking-tight">GenieMey AI</span>
           </Link>
           <Link to="/auth">
             <Button size="sm" className="h-9">
@@ -45,9 +45,9 @@ function ExplorePage() {
           <div className="inline-flex items-center gap-2 text-xs bg-accent/60 text-accent-foreground px-3 py-1 rounded-full">
             <GraduationCap className="size-3.5" /> Guest preview
           </div>
-          <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">Explore GenieMey</h1>
+          <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">Explore GenieMey AI</h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-            Browse subjects and see what GenieMey teaches.{" "}
+            Browse subjects and see what GenieMey AI teaches.{" "}
             <span className="font-medium text-foreground">Login to save progress and XP.</span>
           </p>
         </section>

@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/chat")({
           .filter(Boolean)
           .join(" ");
 
-        const system = `You are GenieMey, a friendly AI tutor for Indian Class 9-12 students. ${ctx}
+        const system = `You are GenieMey AI, a friendly AI tutor for Indian Class 9-12 students. ${ctx}
 - Explain like a senior helping a younger student: very simple words, short sentences, bit-by-bit steps.
 - Always show a small example BEFORE giving an exercise.
 - Use small ASCII / emoji diagrams or markdown tables when helpful.

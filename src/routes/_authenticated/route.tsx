@@ -62,7 +62,7 @@ function AuthedLayout() {
               <Flame className="size-4" />
             </div>
             <div className="flex flex-col leading-tight min-w-0">
-              <span className="font-bold tracking-tight truncate">GenieMey</span>
+              <span className="font-bold tracking-tight truncate">GenieMey AI</span>
               <span className="text-[9px] text-muted-foreground truncate">
                 Powered by StenMey Technologies
               </span>
