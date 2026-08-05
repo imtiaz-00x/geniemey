@@ -131,7 +131,7 @@ function ProfilePage() {
 
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Your profile</h1>
-        <p className="text-sm text-muted-foreground mt-1">Update how you appear in GenieMey.</p>
+        <p className="text-sm text-muted-foreground mt-1">Update how you appear in GenieMey AI.</p>
       </div>
 
       <Card className="p-5 flex flex-col items-center gap-3">
@@ -238,8 +238,8 @@ function ProfilePage() {
 
       <Card className="p-4 flex items-center justify-between">
         <div>
-          <p className="font-semibold text-sm">About GenieMey</p>
-          <p className="text-xs text-muted-foreground">Learn what GenieMey can do for you.</p>
+          <p className="font-semibold text-sm">About GenieMey AI</p>
+          <p className="text-xs text-muted-foreground">Learn what GenieMey AI can do for you.</p>
         </div>
         <Link to="/about">
           <Button variant="outline">
@@ -259,7 +259,7 @@ function ProfilePage() {
       </Card>
 
       <p className="text-center text-[11px] text-muted-foreground pt-2">
-        GenieMey · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+        GenieMey AI · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
       </p>
 
       <AvatarCropper
