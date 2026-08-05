@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Sparkles, Building2, Quote, Target, Heart } from "lucide-react";
+import { ArrowLeft, Mail, Sparkles, Building2, Quote, Target, Heart, Phone, Users } from "lucide-react";
 import founderAsset from "@/assets/founder.png.asset.json";
+import habibAsset from "@/assets/habib.jpg.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/about")({
@@ -137,6 +138,83 @@ function AboutPage() {
             <p className="font-medium">Thank you for being part of the journey.</p>
           </div>
         </Card>
+      </section>
+
+      {/* Contact & Team */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Users className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Contact &amp; Team</h2>
+        </div>
+
+        <Card className="p-5 rounded-2xl border border-border/80 space-y-3">
+          <a
+            href="mailto:stenmeytechnologies@gmail.com"
+            className="flex items-center gap-3 rounded-xl p-2 -m-2 hover:bg-muted/60 transition"
+          >
+            <div className="size-9 shrink-0 rounded-lg bg-primary/10 text-primary grid place-items-center">
+              <Mail className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium truncate">stenmeytechnologies@gmail.com</p>
+            </div>
+          </a>
+          <a
+            href="tel:+919622053027"
+            className="flex items-center gap-3 rounded-xl p-2 -m-2 hover:bg-muted/60 transition"
+          >
+            <div className="size-9 shrink-0 rounded-lg bg-primary/10 text-primary grid place-items-center">
+              <Phone className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Phone</p>
+              <p className="text-sm font-medium truncate">+91 96220 53027</p>
+            </div>
+          </a>
+        </Card>
+
+        <h3 className="text-base font-semibold tracking-tight pt-1">Meet the Team</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            {
+              name: "Imtiaz Ahmed",
+              role: "Founder & Developer",
+              img: founderAsset.url,
+              pos: "center 20%",
+              desc: "Imtiaz Ahmed is the founder and developer of GenieMey. He created the idea, planned the platform, and worked on its product design and development with the goal of making learning more accessible and technology-driven.",
+            },
+            {
+              name: "Mohd Habib Rehman",
+              role: "Co-Founder — Presentation & Project Operations",
+              img: habibAsset.url,
+              pos: "center 20%",
+              desc: "Mohd Habib Rehman supports GenieMey in project presentation, communication, launch coordination, and execution. He contributes to presenting the platform and supporting its future growth and implementation.",
+            },
+          ].map((m) => (
+            <Card
+              key={m.name}
+              className="p-5 rounded-2xl border border-border/80 flex flex-col items-center text-center gap-3 hover:shadow-md transition"
+            >
+              <div className="size-20 rounded-full overflow-hidden border-4 border-primary/30 shadow-sm bg-primary/5">
+                <img
+                  src={m.img}
+                  alt={m.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: m.pos }}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{m.name}</p>
+                <p className="text-xs font-medium text-primary">{m.role}</p>
+              </div>
+              <p className="text-[0.85rem] leading-relaxed text-foreground/80">{m.desc}</p>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <section className="text-center pt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
