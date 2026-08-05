@@ -108,38 +108,6 @@ function AboutPage() {
         </Card>
       </section>
 
-      {/* Founder Note */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
-            <Quote className="size-4" />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight">Founder Note</h2>
-        </div>
-        <Card className="p-6 rounded-2xl border border-border/80 flex flex-col items-center text-center gap-4">
-          <div className="size-28 rounded-full overflow-hidden border-4 border-primary/30 shadow-md bg-primary/5">
-            <img
-              src={founderAsset.url}
-              alt="Imtiaz Ahmed — Founder"
-              className="w-full h-full object-cover"
-              style={{ objectPosition: "center 20%" }}
-            />
-          </div>
-          <div className="space-y-1">
-            <p className="text-base font-semibold text-foreground">Imtiaz Ahmed</p>
-            <p className="text-xs font-medium text-primary">Founder</p>
-          </div>
-          <div className="space-y-3 text-[0.95rem] leading-relaxed text-foreground/90 text-left">
-            <p>
-              GenieMey AI started as an idea to improve the way students learn and access
-              educational support. This project is being developed with a focus on making
-              learning more accessible and practical for students.
-            </p>
-            <p className="font-medium">Thank you for being part of the journey.</p>
-          </div>
-        </Card>
-      </section>
-
       {/* Contact & Team */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
