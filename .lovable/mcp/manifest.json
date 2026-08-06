@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://elspkhkljgotmmyqrzzh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "geniemey",
+      "version": "0.1.0",
+      "title": "GenieMey"
+    },
+    "tools": [
+      {
+        "name": "list_study_sessions",
+        "title": "List study sessions",
+        "description": "List the signed-in student's recent GenieMey AI study sessions (topic, subject, grade, completion).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "How many sessions to return (default 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "subject": {
+              "description": "Optional subject filter, e.g. Maths or Science.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_study_progress",
+        "title": "Get study progress",
+        "description": "Get the signed-in student's GenieMey AI progress summary: XP, streak, completed sessions and recent quiz scores.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "recentQuizzes": {
+              "description": "How many recent quiz attempts to include (default 5).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_tutor_threads",
+        "title": "List tutor chats",
+        "description": "List the signed-in student's GenieMey AI tutor chat threads with their subject and topic.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "How many threads to return (default 15).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_tutor_thread",
+        "title": "Read a tutor chat",
+        "description": "Read the messages of one of the signed-in student's GenieMey AI tutor chat threads.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "threadId": {
+              "type": "string",
+              "description": "The tutor thread id from list_tutor_threads."
+            },
+            "limit": {
+              "description": "Max messages to return (default 40).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "threadId"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_tutor_thread",
+        "title": "Start a tutor chat",
+        "description": "Create a new GenieMey AI tutor chat thread for the signed-in student so they can continue it inside the app.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short title for the chat, e.g. 'Trigonometry doubts'."
+            },
+            "grade": {
+              "description": "Class/grade 9-12.",
+              "type": "integer",
+              "minimum": 9,
+              "maximum": 12
+            },
+            "subject": {
+              "description": "Subject, e.g. Maths or Science.",
+              "type": "string"
+            },
+            "topic": {
+              "description": "Topic the chat is about.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
