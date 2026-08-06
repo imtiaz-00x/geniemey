@@ -26,6 +26,7 @@ import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor.index'
 import { Route as AuthenticatedTutorThreadIdRouteImport } from './routes/_authenticated/tutor.$threadId'
 import { Route as AuthenticatedLearnSessionIdRouteImport } from './routes/_authenticated/learn.$sessionId'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -113,6 +114,11 @@ const AuthenticatedLearnSessionIdRoute =
     path: '/learn/$sessionId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/progress': typeof AuthenticatedProgressRoute
   '/tutor': typeof AuthenticatedTutorRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
   '/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/progress': typeof AuthenticatedProgressRoute
   '/api/chat': typeof ApiChatRoute
   '/': typeof AuthenticatedIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
   '/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor': typeof AuthenticatedTutorRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/learn/$sessionId': typeof AuthenticatedLearnSessionIdRoute
   '/_authenticated/tutor/$threadId': typeof AuthenticatedTutorThreadIdRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/tutor'
     | '/api/chat'
+    | '/.lovable/oauth/consent'
     | '/learn/$sessionId'
     | '/tutor/$threadId'
     | '/tutor/'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/api/chat'
     | '/'
+    | '/.lovable/oauth/consent'
     | '/learn/$sessionId'
     | '/tutor/$threadId'
     | '/tutor'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor'
     | '/api/chat'
     | '/_authenticated/'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/learn/$sessionId'
     | '/_authenticated/tutor/$threadId'
     | '/_authenticated/tutor/'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiChatRoute: typeof ApiChatRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -355,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLearnSessionIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -406,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiChatRoute: ApiChatRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
