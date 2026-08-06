@@ -14,12 +14,21 @@ import { checkUsernameAvailable, signUpWithUsername } from "@/lib/username.funct
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/" });
+    if (data.session) throw redirect({ href: safeNext(search.next) ?? "/" });
   },
   component: AuthPage,
 });
+
+/** Only allow same-origin relative paths as a post-login redirect target. */
+function safeNext(next?: string) {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return undefined;
+  return next;
+}
 
 // Synthetic email domain for username-only accounts.
 const USERNAME_EMAIL_DOMAIN = "users.studygenie.app";
@@ -28,6 +37,8 @@ const isUsernameValid = (u: string) => /^[a-zA-Z0-9_.]{3,20}$/.test(u);
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const nextPath = safeNext(next);
   const [tab, setTab] = useState<"email" | "username">("email");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [showPass, setShowPass] = useState(false);
@@ -42,15 +53,18 @@ function AuthPage() {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/" });
+      if (event === "SIGNED_IN" && session) {
+        if (nextPath) window.location.href = nextPath;
+        else navigate({ to: "/" });
+      }
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, nextPath]);
 
   async function handleGoogle() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: nextPath ? window.location.origin + nextPath : window.location.origin,
     });
     if (result.error) {
       toast.error("Google sign-in failed");
@@ -68,7 +82,7 @@ function AuthPage() {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: nextPath ? window.location.origin + nextPath : window.location.origin,
             data: {
               display_name: displayName.trim(),
               name: displayName.trim(),
