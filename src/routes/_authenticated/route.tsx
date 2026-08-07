@@ -56,7 +56,7 @@ function AuthedLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-30 backdrop-blur bg-background/85 border-b border-border">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2 min-w-0">
             <div className="size-8 shrink-0 rounded-lg bg-primary text-primary-foreground grid place-items-center">
               <Flame className="size-4" />
