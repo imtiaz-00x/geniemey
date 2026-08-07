@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users } from "lucide-react";
+import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users, Bot, BookOpen, ClipboardList, FileText, MessageCircleQuestion, TrendingUp, Library, CheckCircle2, Rocket, Lightbulb, Globe, ShieldCheck, RefreshCw } from "lucide-react";
 import founderAsset from "@/assets/founder.png.asset.json";
 import habibAsset from "@/assets/habib.jpg.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
@@ -198,6 +198,193 @@ function AboutPage() {
           </Button>
         </a>
       </section>
+      {/* What GenieMey AI Offers */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Sparkles className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">What GenieMey AI Offers</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            { icon: Bot, title: "AI-Powered Explanations", desc: "Understand complex topics through intelligent AI explanations." },
+            { icon: BookOpen, title: "Smart Study Notes", desc: "Well-structured notes generated for faster learning." },
+            { icon: ClipboardList, title: "Interactive Quizzes", desc: "Test knowledge instantly with AI-powered quizzes." },
+            { icon: FileText, title: "Downloadable PDF Notes", desc: "Access printable study material anytime." },
+            { icon: MessageCircleQuestion, title: "AI Doubt Assistant", desc: "Ask questions and receive instant academic support." },
+            { icon: Target, title: "Personalized Learning", desc: "Learning experience tailored to each student." },
+            { icon: TrendingUp, title: "Progress Tracking", desc: "Track performance and identify improvement areas." },
+            { icon: Library, title: "Organized Subject Learning", desc: "Easy navigation through subjects and classes." },
+          ].map((f) => (
+            <Card key={f.title} className="p-4 rounded-2xl border border-border/80 flex items-start gap-3 hover:shadow-md transition">
+              <div className="size-9 shrink-0 rounded-lg bg-primary/10 text-primary grid place-items-center">
+                <f.icon className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{f.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Why Choose GenieMey AI */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <CheckCircle2 className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Why Choose GenieMey AI</h2>
+        </div>
+        <Card className="p-5 rounded-2xl border border-border/80">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              "AI designed specifically for education.",
+              "Easy-to-understand explanations.",
+              "Saves valuable study time.",
+              "Personalized learning support.",
+              "Clean and distraction-free interface.",
+              "Secure and privacy-focused.",
+              "Continuously improving with AI.",
+              "Built for students, teachers, and schools.",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-2">
+                <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground/90 leading-relaxed">{item}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* Product Roadmap */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Rocket className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Product Roadmap</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="p-5 rounded-2xl border border-border/80 space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Current Features</h3>
+            <div className="space-y-2">
+              {[
+                "AI Chat Assistant",
+                "AI Study Notes",
+                "Smart Quiz System",
+                "PDF Notes",
+                "Subject & Class Selection",
+                "Personalized Learning",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-success shrink-0" />
+                  <p className="text-sm text-foreground/90">{item}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-5 rounded-2xl border border-border/80 space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Coming Soon</h3>
+            <div className="space-y-2">
+              {[
+                "AI-generated Video Lectures",
+                "Teacher Dashboard",
+                "Parent Dashboard",
+                "Smart Board Integration",
+                "Homework & Assignment Tracking",
+                "Voice AI Tutor",
+                "Mobile Applications",
+                "Learning Analytics",
+                "Multi-language Support",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <Rocket className="size-4 text-primary shrink-0" />
+                  <p className="text-sm text-foreground/90">{item}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Core Values */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Heart className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Core Values</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { icon: Lightbulb, title: "Innovation", desc: "Building intelligent educational technology." },
+            { icon: Users, title: "Student First", desc: "Every feature is designed around learners." },
+            { icon: Globe, title: "Accessibility", desc: "Making quality education available to everyone." },
+            { icon: ShieldCheck, title: "Trust & Privacy", desc: "Protecting user data with responsibility." },
+            { icon: RefreshCw, title: "Continuous Improvement", desc: "Always learning, improving, and evolving." },
+          ].map((v) => (
+            <Card key={v.title} className="p-4 rounded-2xl border border-border/80 space-y-2 hover:shadow-md transition">
+              <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center w-fit">
+                <v.icon className="size-4" />
+              </div>
+              <p className="text-sm font-semibold">{v.title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{v.desc}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Version Information */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+            <Sparkles className="size-4" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Version Information</h2>
+        </div>
+        <Card className="p-5 rounded-2xl border border-border/80 space-y-3">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Product</p>
+              <p className="text-sm font-semibold">GenieMey AI</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Version</p>
+              <p className="text-sm font-semibold">1.0 Beta</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Status</p>
+              <p className="text-sm font-semibold">Under Continuous Development</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Last Updated</p>
+              <p className="text-sm font-semibold">August 2026</p>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* Quote */}
+      <section className="text-center py-6">
+        <p className="text-sm italic text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          "Every great innovation starts with a single idea. GenieMey AI is committed to transforming education through Artificial Intelligence."
+        </p>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/80 pt-8 pb-4 space-y-4">
+        <div className="text-center space-y-1">
+          <p className="text-sm font-semibold">Made with ❤️ in India</p>
+          <p className="text-xs text-muted-foreground">Powered by StenMey Technologies</p>
+          <p className="text-xs text-muted-foreground">Building AI Solutions for Education & Business</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">© 2026 StenMey Technologies. All Rights Reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
