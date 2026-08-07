@@ -68,6 +68,25 @@ function AuthedLayout() {
               </span>
             </div>
           </Link>
+          <nav className="hidden md:flex items-center gap-1 mx-auto">
+            {navItems.map((item) => {
+              const active = item.match(pathname);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                  }`}
+                >
+                  <item.icon className="size-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/60 text-accent-foreground text-xs font-medium">
               <Flame className="size-3.5 text-flame" />
