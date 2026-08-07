@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users } from "lucide-react";
+import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users, Bot, BookOpen, ClipboardList, FileText, MessageCircleQuestion, TrendingUp, Library, CheckCircle2, Rocket, Lightbulb, Globe, ShieldCheck, RefreshCw } from "lucide-react";
 import founderAsset from "@/assets/founder.png.asset.json";
 import habibAsset from "@/assets/habib.jpg.asset.json";
 import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
