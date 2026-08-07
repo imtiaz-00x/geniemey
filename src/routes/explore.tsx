@@ -6,8 +6,8 @@ import { Flame, GraduationCap, Calculator, FlaskConical, Atom, Leaf, BookOpen, S
 export const Route = createFileRoute("/explore")({
   head: () => ({
     meta: [
-      { title: "Explore GenieMey AI — Free AI-powered learning" },
-      { name: "description", content: "Browse Math, Science, and NCERT topics as a guest. Sign in to save your XP, streak, and progress." },
+      { title: "Explore — GenieMey AI - Your AI study Assistant" },
+      { name: "description", content: "Your AI study assistant for Math and Science. Learn with smart notes, quizzes, NCERT solutions, and instant doubt support." },
     ],
   }),
   component: ExplorePage,
