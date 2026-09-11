@@ -32,7 +32,7 @@ function ExplorePage() {
             </div>
             <span className="font-bold tracking-tight">GenieMey AI</span>
           </Link>
-          <Link to="/auth">
+          <Link to="/auth" search={{}}>
             <Button size="sm" className="h-9">
               <LogIn className="size-4" /> Sign in
             </Button>
@@ -57,7 +57,7 @@ function ExplorePage() {
             <p className="font-semibold text-sm sm:text-base">Ready to start earning XP?</p>
             <p className="text-xs sm:text-sm text-muted-foreground">Create a free account in 15 seconds.</p>
           </div>
-          <Link to="/auth">
+          <Link to="/auth" search={{}}>
             <Button className="h-10"><Sparkles className="size-4" /> Get started</Button>
           </Link>
         </Card>
@@ -74,7 +74,7 @@ function ExplorePage() {
                   <p className="font-semibold">{s.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.blurb}</p>
                 </div>
-                <Link to="/auth">
+                <Link to="/auth" search={{}}>
                   <Button size="sm" variant="ghost">Start</Button>
                 </Link>
               </Card>
