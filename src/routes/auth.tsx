@@ -303,7 +303,7 @@ function AuthPage() {
             <Link to="/" className="hover:underline">Go back home</Link>
           </p>
           <p className="text-center text-[11px] text-muted-foreground mt-2">
-            GenieMey AI · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+            GenieMey AI · Powered by <span className="font-semibold text-foreground/80">FluxCode Tech</span>
           </p>
         </div>
       </main>

@@ -64,7 +64,7 @@ function AuthedLayout() {
             <div className="flex flex-col leading-tight min-w-0">
               <span className="font-bold tracking-tight truncate">GenieMey AI</span>
               <span className="text-[9px] text-muted-foreground truncate">
-                Powered by StenMey Technologies
+                Powered by FluxCode Tech
               </span>
             </div>
           </Link>
