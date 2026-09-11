@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users, Bot, BookOpen, ClipboardList, FileText, MessageCircleQuestion, TrendingUp, Library, CheckCircle2, Rocket, Lightbulb, Globe, ShieldCheck, RefreshCw } from "lucide-react";
 import founderAsset from "@/assets/founder.png.asset.json";
 import habibAsset from "@/assets/habib.jpg.asset.json";
-import fluxcodeLogo from "@/assets/fluxcode-logo.png";
+import fluxcodeLogoAsset from "@/assets/fluxcode-logo.png.asset.json";
+const fluxcodeLogo = fluxcodeLogoAsset.url;
 
 export const Route = createFileRoute("/_authenticated/about")({
   component: AboutPage,
