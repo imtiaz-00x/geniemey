@@ -96,7 +96,7 @@ function ResetPasswordPage() {
               </Button>
             </form>
             <p className="text-center text-xs text-muted-foreground">
-              <Link to="/auth" search={{}} className="hover:underline">Back to sign in</Link>
+              <Link to="/auth" search={{ next: undefined }} className="hover:underline">Back to sign in</Link>
             </p>
           </CardContent>
         </Card>
