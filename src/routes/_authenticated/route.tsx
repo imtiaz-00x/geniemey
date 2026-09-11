@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) throw redirect({ to: "/auth", search: { next: undefined } });
     return { user: data.user };
   },
   component: AuthedLayout,
@@ -42,7 +42,7 @@ function AuthedLayout() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    router.navigate({ to: "/auth", replace: true });
+    router.navigate({ to: "/auth", search: { next: undefined }, replace: true });
   }
 
   const navItems = [
@@ -64,7 +64,7 @@ function AuthedLayout() {
             <div className="flex flex-col leading-tight min-w-0">
               <span className="font-bold tracking-tight truncate">GenieMey AI</span>
               <span className="text-[9px] text-muted-foreground truncate">
-                Powered by StenMey Technologies
+                Powered by FluxCode Tech
               </span>
             </div>
           </Link>

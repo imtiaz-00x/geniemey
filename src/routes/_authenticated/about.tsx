@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Sparkles, Building2, Target, Heart, Phone, Users, Bot, BookOpen, ClipboardList, FileText, MessageCircleQuestion, TrendingUp, Library, CheckCircle2, Rocket, Lightbulb, Globe, ShieldCheck, RefreshCw } from "lucide-react";
 import founderAsset from "@/assets/founder.png.asset.json";
 import habibAsset from "@/assets/habib.jpg.asset.json";
-import stenmeyLogo from "@/assets/stenmey-logo.png.asset.json";
+import fluxcodeLogo from "@/assets/fluxcode-logo.png";
 
 export const Route = createFileRoute("/_authenticated/about")({
   component: AboutPage,
@@ -43,7 +43,7 @@ function AboutPage() {
           </p>
           <p className="text-sm text-muted-foreground">
             Built with <span className="text-destructive">❤</span> by{" "}
-            <span className="font-semibold text-foreground">StenMey Technologies</span>.
+            <span className="font-semibold text-foreground">FluxCode Tech</span>.
           </p>
         </Card>
       </section>
@@ -71,35 +71,39 @@ function AboutPage() {
             confidence.
           </p>
           <p className="text-sm text-muted-foreground">
-            Built by <span className="font-semibold text-foreground">StenMey Technologies</span>.
+            Built by <span className="font-semibold text-foreground">FluxCode Tech</span>.
           </p>
         </Card>
       </section>
 
-      {/* About StenMey Technologies */}
+      {/* About FluxCode Tech */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
             <Building2 className="size-4" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight">About StenMey Technologies</h2>
+          <h2 className="text-xl font-bold tracking-tight">About FluxCode Tech</h2>
         </div>
         <Card className="p-6 rounded-2xl border border-border/80 space-y-4">
           <div className="flex justify-center">
             <img
-              src={stenmeyLogo.url}
-              alt="StenMey Technologies logo"
+              src={fluxcodeLogo}
+              alt="FluxCode Tech logo"
+              loading="lazy"
+              width={512}
+              height={512}
               className="w-40 h-40 object-contain"
             />
           </div>
           <div className="space-y-3 text-[0.95rem] leading-relaxed text-foreground/90">
             <p>
-              StenMey Technologies is a student-led technology initiative focused on creating
-              useful digital products for learning, innovation and everyday problem solving.
+              FluxCode Tech is a technology and product development initiative focused on building practical AI-powered solutions for education, local businesses, and everyday problems.
             </p>
             <p>
-              We aim to build simple, modern and impactful technology that helps people learn,
-              create and grow.
+              We design and develop modern digital products that combine AI, automation, and user-friendly technology to turn real-world ideas into working solutions. Our projects include GenieMey, an AI-powered learning platform for students, along with business-focused solutions such as CafeCode and HTrack.
+            </p>
+            <p>
+              Our vision is to build useful, affordable, and scalable technology while starting from real problems faced by students, businesses, and local communities.
             </p>
             <p className="text-sm font-medium text-primary italic">
               Building ideas for the future.
@@ -378,11 +382,11 @@ function AboutPage() {
       <footer className="border-t border-border/80 pt-8 pb-4 space-y-4">
         <div className="text-center space-y-1">
           <p className="text-sm font-semibold">Made with ❤️ in India</p>
-          <p className="text-xs text-muted-foreground">Powered by StenMey Technologies</p>
+          <p className="text-xs text-muted-foreground">Powered by FluxCode Tech</p>
           <p className="text-xs text-muted-foreground">Building AI Solutions for Education & Business</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-muted-foreground">© 2026 StenMey Technologies. All Rights Reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2026 FluxCode Tech. All Rights Reserved.</p>
         </div>
       </footer>
     </div>

@@ -88,7 +88,7 @@ function ProfilePage() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { next: undefined }, replace: true });
   }
 
 
@@ -259,7 +259,7 @@ function ProfilePage() {
       </Card>
 
       <p className="text-center text-[11px] text-muted-foreground pt-2">
-        GenieMey AI · Powered by <span className="font-semibold text-foreground/80">StenMey Technologies</span>
+        GenieMey AI · Powered by <span className="font-semibold text-foreground/80">FluxCode Tech</span>
       </p>
 
       <AvatarCropper
