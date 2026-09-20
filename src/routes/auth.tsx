@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,10 +62,17 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: nextPath ? window.location.origin + nextPath : window.location.origin,
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: nextPath
+          ? `${window.location.origin}${nextPath}`
+          : window.location.origin,
+      },
     });
-    if (result.error) {
+
+    if (error) {
       toast.error("Google sign-in failed");
       setLoading(false);
     }
@@ -116,7 +122,6 @@ function AuthPage() {
         if (!displayName.trim()) throw new Error("Please enter a display name");
         if (password.length < 6) throw new Error("Password must be at least 6 characters");
 
-        // Create pre-confirmed user on the server (synthetic email can't receive confirmations)
         const { email: syntheticEmail } = await signUpWithUsername({
           data: {
             username: username.trim(),
@@ -125,7 +130,6 @@ function AuthPage() {
           },
         });
 
-        // Sign the user in immediately
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: syntheticEmail,
           password,
@@ -133,7 +137,6 @@ function AuthPage() {
         if (signInErr) throw signInErr;
         toast.success(`Welcome, ${displayName.trim()}!`);
       } else {
-        // Sign in: username → synthetic email, or use provided email
         const loginEmail = email.trim() || usernameToEmail(username);
         const { error } = await supabase.auth.signInWithPassword({
           email: loginEmail,
