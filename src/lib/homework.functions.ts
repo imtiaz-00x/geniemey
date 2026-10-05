@@ -15,23 +15,29 @@ type ChatCompletionResponse = {
 async function callGateway(
   messages: Array<{ role: string; content: unknown }>,
 ): Promise<string> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": apiKey,
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
+
+  const res = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gemini-3.6-flash",
+        messages,
+      }),
     },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages,
-    }),
-  });
+  );
+
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`AI gateway error ${res.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Gemini API error ${res.status}: ${errText.slice(0, 200)}`);
   }
+
   const json = (await res.json()) as ChatCompletionResponse;
   return json.choices?.[0]?.message?.content ?? "";
 }
@@ -63,12 +69,16 @@ export const solveHomework = createServerFn({ method: "POST" })
             type: "text",
             text: `This is a photo of a student's homework. List every question you can see (numbered), then give a clear step-by-step solution for each, an easy-language answer, a worked example, and a "Neat Notes" section the student can copy into their notebook.\n\n${SOLUTION_FORMAT}`,
           },
-          { type: "image_url", image_url: { url: data.imageDataUrl } },
+          {
+            type: "image_url",
+            image_url: { url: data.imageDataUrl },
+          },
         ],
       },
     ]);
 
-    const titleGuess = data.title?.trim() || `Homework · ${new Date().toLocaleDateString()}`;
+    const titleGuess =
+      data.title?.trim() || `Homework · ${new Date().toLocaleDateString()}`;
 
     const { data: row, error } = await context.supabase
       .from("homework_items")
@@ -81,8 +91,14 @@ export const solveHomework = createServerFn({ method: "POST" })
       })
       .select("id, created_at")
       .single();
+
     if (error) throw new Error(error.message);
-    return { id: row.id, title: titleGuess, solution_md: solution };
+
+    return {
+      id: row.id,
+      title: titleGuess,
+      solution_md: solution,
+    };
   });
 
 export const askHomeworkQuestion = createServerFn({ method: "POST" })
@@ -118,8 +134,14 @@ export const askHomeworkQuestion = createServerFn({ method: "POST" })
       })
       .select("id, created_at")
       .single();
+
     if (error) throw new Error(error.message);
-    return { id: row.id, title, solution_md: body };
+
+    return {
+      id: row.id,
+      title,
+      solution_md: body,
+    };
   });
 
 export const followUpHomework = createServerFn({ method: "POST" })
@@ -140,6 +162,7 @@ export const followUpHomework = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("user_id", context.userId)
       .single();
+
     if (error) throw new Error(error.message);
 
     const askLine = data.simpler
@@ -154,7 +177,10 @@ export const followUpHomework = createServerFn({ method: "POST" })
       },
     ]);
 
-    const label = data.simpler ? "I still don't understand" : `You asked: ${data.question}`;
+    const label = data.simpler
+      ? "I still don't understand"
+      : `You asked: ${data.question}`;
+
     const appended = `${row.solution_md ?? ""}\n\n---\n\n**${label}**\n\n${answer}`;
 
     const { error: upErr } = await context.supabase
@@ -162,7 +188,9 @@ export const followUpHomework = createServerFn({ method: "POST" })
       .update({ solution_md: appended })
       .eq("id", data.id)
       .eq("user_id", context.userId);
+
     if (upErr) throw new Error(upErr.message);
+
     return { solution_md: appended };
   });
 
@@ -175,13 +203,17 @@ export const listHomework = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(50);
+
     if (error) throw new Error(error.message);
+
     return data ?? [];
   });
 
 export const getHomework = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("homework_items")
@@ -189,18 +221,23 @@ export const getHomework = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("user_id", context.userId)
       .single();
+
     if (error) throw new Error(error.message);
+
     return row;
   });
 
 export const deleteHomework = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     await context.supabase
       .from("homework_items")
       .delete()
       .eq("id", data.id)
       .eq("user_id", context.userId);
+
     return { ok: true };
   });
