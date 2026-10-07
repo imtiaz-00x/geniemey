@@ -692,7 +692,7 @@ Use exactly this Markdown structure and keep every section short and scannable:
 ## 9. 30-Second Revision (5 crisp bullets)
 
 Target 700-900 words. No preamble, start directly with the heading.`,
-      providerOptions: { lovable: { reasoningEffort: "none" } },
+      
     });
     return { notes: text };
   });
