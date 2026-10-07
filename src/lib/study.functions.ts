@@ -33,11 +33,8 @@ const sectionSchema = z.enum(["school", "ncert", "exam"]).default("school");
 
 function model() {
   return (async () => {
-    const { createLovableAiGatewayProvider,
-      getLovableApiKey } = await import("./ai-gateway.server");
-    return
-    createLovableAiGatewayProvider(getLovableApiKey())("google/
-    gemini-3-flash-preview");
+    const { createGeminiProvider } = await import("./ai-gateway.server");
+    return createGeminiProvider()("gemini-3.6-flash");
   })();
 }
 
