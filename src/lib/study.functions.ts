@@ -735,7 +735,7 @@ Use exactly this Markdown structure:
 ## Quick Check (3 short questions with one-line answers)
 
 Target 500-750 words. Start directly with the heading.`,
-      providerOptions: { lovable: { reasoningEffort: "none" } },
+ 
     });
     return { explanation: text };
   });
