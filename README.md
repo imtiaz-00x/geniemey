@@ -1,26 +1,29 @@
 # GenieMey
 
-I want to create an app for students from where they can learn their subjects and achieve something good in their acedamics
+GenieMey is an AI-powered learning platform designed for students to learn their subjects, understand difficult concepts, practice questions, and improve their academic performance.
 
-This project was built with [Lovable](https://lovable.dev).
+## Features
 
-**Live app**: https://geniemey.lovable.app
+- 📚 Subject-wise learning
+- 🤖 AI-powered explanations
+- 📝 Homework and question solving
+- 🧠 Quizzes and practice
+- 📊 Learning progress tracking
+- 📄 Study materials and resources
+- 🎯 Academic-focused learning tools
 
-## Build with Lovable
+## Tech Stack
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/294f1353-8b16-4ff0-af33-2a254b46a009).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- React
+- TypeScript
+- TanStack Start
+- Vite
+- Supabase
+- Google Gemini AI
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+### Install dependencies
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+npm install
