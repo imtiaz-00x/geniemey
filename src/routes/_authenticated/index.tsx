@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Calculator, FlaskConical, Atom, Leaf, BookOpen, Globe2, Landmark,
-  Sparkles, ArrowRight, Loader2, Library,FolderOpen ,
+  Sparkles, ArrowRight, Loader2, Library, FolderOpen ,
 } from "lucide-react";
 import { toast } from "sonner";
 
