@@ -6,7 +6,9 @@ import {
   listMaterials,
   createMaterial,
   deleteMaterial,
+  getMaterialDownloadUrl,
 } from "@/lib/materials.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,7 @@ import {
   FileQuestion,
   StickyNote,
   BookOpen,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,6 +55,7 @@ function MaterialsPage() {
   const list = useServerFn(listMaterials);
   const create = useServerFn(createMaterial);
   const del = useServerFn(deleteMaterial);
+  const getDownloadUrl = useServerFn(getMaterialDownloadUrl);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -95,17 +99,50 @@ function MaterialsPage() {
         materialType = "ppt";
       }
 
-      return create({
-        data: {
-          title: finalTitle,
-          materialType,
-          fileName: selectedFile.name,
-          fileSize: selectedFile.size,
-          mimeType: selectedFile.type || undefined,
-          description: description.trim() || undefined,
-          sourceType: "upload",
-        },
-      });
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error("Please sign in again.");
+      }
+
+      const safeFileName = selectedFile.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "_",
+      );
+
+      const filePath = `${user.id}/${crypto.randomUUID()}-${safeFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("materials")
+        .upload(filePath, selectedFile, {
+          contentType: selectedFile.type || "application/octet-stream",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      try {
+        return await create({
+          data: {
+            title: finalTitle,
+            materialType,
+            fileName: selectedFile.name,
+            filePath,
+            fileSize: selectedFile.size,
+            mimeType: selectedFile.type || undefined,
+            description: description.trim() || undefined,
+            sourceType: "upload",
+          },
+        });
+      } catch (error) {
+        await supabase.storage.from("materials").remove([filePath]);
+        throw error;
+      }
     },
 
     onSuccess: () => {
@@ -119,7 +156,7 @@ function MaterialsPage() {
         fileRef.current.value = "";
       }
 
-      toast.success("Material added to My Materials!");
+      toast.success("Material uploaded successfully!");
     },
 
     onError: (e: Error) => {
@@ -133,6 +170,18 @@ function MaterialsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["materials"] });
       toast.success("Material deleted.");
+    },
+
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+  });
+
+  const openMut = useMutation({
+    mutationFn: async (id: string) => {
+      const result = await getDownloadUrl({ data: { id } });
+
+      window.open(result.url, "_blank", "noopener,noreferrer");
     },
 
     onError: (e: Error) => {
@@ -199,7 +248,6 @@ function MaterialsPage() {
           disabled={createMut.isPending}
         >
           <Upload className="size-4 mr-2" />
-
           {selectedFile ? "Change file" : "Choose file"}
         </Button>
 
@@ -237,7 +285,7 @@ function MaterialsPage() {
           {createMut.isPending ? (
             <>
               <Loader2 className="size-4 mr-2 animate-spin" />
-              Adding…
+              Uploading…
             </>
           ) : (
             <>
@@ -296,9 +344,7 @@ function MaterialsPage() {
           <Card className="p-8 text-center rounded-2xl">
             <FileText className="size-9 mx-auto text-muted-foreground mb-3" />
 
-            <p className="font-medium">
-              No materials yet
-            </p>
+            <p className="font-medium">No materials yet</p>
 
             <p className="text-sm text-muted-foreground mt-1">
               Upload your first study resource above.
@@ -335,17 +381,30 @@ function MaterialsPage() {
                       </p>
                     </div>
 
+                    {material.file_path && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0"
+                        disabled={openMut.isPending}
+                        onClick={() => openMut.mutate(material.id)}
+                        title="Open material"
+                      >
+                        {openMut.isPending ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <ExternalLink className="size-4" />
+                        )}
+                      </Button>
+                    )}
+
                     <Button
                       size="sm"
                       variant="ghost"
                       className="shrink-0"
                       disabled={deleteMut.isPending}
                       onClick={() => {
-                        if (
-                          confirm(
-                            "Delete this material?",
-                          )
-                        ) {
+                        if (confirm("Delete this material?")) {
                           deleteMut.mutate(material.id);
                         }
                       }}
