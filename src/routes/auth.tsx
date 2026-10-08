@@ -3,15 +3,20 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, Mail, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Checkbox } from "../components/ui/checkbox";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Separator } from "../components/ui/separator";
 
-import { supabase } from "@/integrations/supabase/client";
-import { signUpWithUsername } from "@/lib/username.functions";
+import { supabase } from "../integrations/supabase/client";
+import { signUpWithUsername } from "../lib/username.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -19,7 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function safeNext(value: unknown) {
   if (typeof value !== "string") return "/";
-  if (!value.startsWith("/") || value.startsWith("//")) return "/";
+  if (!value.startsWith("/") || value.startsWith("//")) return value;
   return value;
 }
 
@@ -42,7 +47,7 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [nextPath, setNextPath] = useState("/");
+  const [nextPath] = useState("/");
 
   const handleGoogle = async () => {
     try {
@@ -293,6 +298,7 @@ function AuthPage() {
             showPassword={showPassword}
             setShowPassword={setShowPassword}
           />
+
           <BottomRow
             rememberMe={rememberMe}
             setRememberMe={setRememberMe}
@@ -318,6 +324,7 @@ function AuthPage() {
             <div className="absolute inset-0 flex items-center">
               <Separator />
             </div>
+
             <div className="relative flex justify-center">
               <span className="bg-card px-3 text-xs text-muted-foreground">
                 OR
@@ -469,6 +476,7 @@ function PasswordField({
     </div>
   );
 }
+
 function BottomRow({
   rememberMe,
   setRememberMe,
