@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "../integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent } from "../components/ui/card";
 import { toast } from "sonner";
 import { Flame, Eye, EyeOff } from "lucide-react";
 
@@ -65,6 +65,7 @@ function ResetPasswordPage() {
         <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center">
           <Flame className="size-5" />
         </div>
+
         <span className="font-bold text-lg">GenieMey AI</span>
       </header>
 
