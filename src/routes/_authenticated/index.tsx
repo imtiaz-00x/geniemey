@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Calculator, FlaskConical, Atom, Leaf, BookOpen, Globe2, Landmark,
-  Sparkles, ArrowRight, Loader2, Library, FolderOpen ,
+  Sparkles, ArrowRight, Loader2, Library, FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -74,60 +74,116 @@ function HomePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-5 space-y-6 pb-24">
       <section>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{greeting.title}</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {greeting.title}
+        </p>
+
         <h1 className="text-2xl sm:text-3xl font-bold mt-1">
           Hi {firstName ?? "there"} <span aria-hidden>👋</span>
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">What are we studying today?</p>
+
+        <p className="text-muted-foreground text-sm mt-1">
+          What are we studying today?
+        </p>
+
         <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="font-semibold text-primary">{profile?.total_xp ?? 0} XP</span>
+          <span className="font-semibold text-primary">
+            {profile?.total_xp ?? 0} XP
+          </span>
+
           <span aria-hidden>•</span>
-          <span>{profile?.current_streak ?? 0} Day Streak <span aria-hidden>🔥</span></span>
+
+          <span>
+            {profile?.current_streak ?? 0} Day Streak{" "}
+            <span aria-hidden>🔥</span>
+          </span>
         </div>
       </section>
-
 
       {lastSession && !lastSession.completed && (
         <Card
           className="p-4 flex items-center justify-between gap-3 bg-primary/5 border-primary/30 cursor-pointer hover:bg-primary/10 transition"
-          onClick={() => navigate({ to: "/learn/$sessionId", params: { sessionId: lastSession.id } })}
+          onClick={() =>
+            navigate({
+              to: "/learn/$sessionId",
+              params: { sessionId: lastSession.id },
+            })
+          }
         >
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-primary font-semibold">Continue learning</p>
-            <p className="font-semibold mt-0.5 truncate">{lastSession.topic}</p>
-            <p className="text-xs text-muted-foreground">{lastSession.subject}</p>
+            <p className="text-xs uppercase tracking-wide text-primary font-semibold">
+              Continue learning
+            </p>
+
+            <p className="font-semibold mt-0.5 truncate">
+              {lastSession.topic}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              {lastSession.subject}
+            </p>
           </div>
+
           <ArrowRight className="size-5 text-primary shrink-0" />
         </Card>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      {/* Quick access */}
+      <div className="grid sm:grid-cols-3 gap-3">
         <Link to="/ncert" className="block">
           <Card className="p-4 h-full hover:border-primary/50 transition flex items-center gap-3">
             <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
               <Library className="size-5" />
             </div>
+
             <div className="min-w-0">
               <p className="font-semibold">NCERT Library</p>
-              <p className="text-xs text-muted-foreground">Browse chapters with easy AI explanations</p>
+
+              <p className="text-xs text-muted-foreground">
+                Browse chapters with easy AI explanations
+              </p>
             </div>
           </Card>
         </Link>
+
         <Link to="/exams" className="block">
           <Card className="p-4 h-full hover:border-primary/50 transition flex items-center gap-3">
             <div className="size-11 rounded-xl bg-flame/15 text-flame grid place-items-center shrink-0">
               <Sparkles className="size-5" />
             </div>
+
             <div className="min-w-0">
               <p className="font-semibold">Competitive Exams</p>
-              <p className="text-xs text-muted-foreground">JEE · NEET · CUET · Olympiad — tests & series</p>
+
+              <p className="text-xs text-muted-foreground">
+                JEE · NEET · CUET · Olympiad — tests & series
+              </p>
+            </div>
+          </Card>
+        </Link>
+
+        <Link to="/materials" className="block">
+          <Card className="p-4 h-full hover:border-primary/50 transition flex items-center gap-3">
+            <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
+              <FolderOpen className="size-5" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="font-semibold">My Materials</p>
+
+              <p className="text-xs text-muted-foreground">
+                PDFs, notes, question papers & study files
+              </p>
             </div>
           </Card>
         </Link>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Class</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Class
+        </h2>
+
         <div className="grid grid-cols-4 gap-2">
           {GRADES.map((g) => (
             <button
@@ -139,20 +195,29 @@ function HomePage() {
                   : "bg-card border-border text-foreground hover:border-primary/50"
               }`}
             >
-              <span className="block text-[10px] uppercase tracking-wider opacity-70">Class</span>
-              <span className="block text-lg leading-none">{g}</span>
+              <span className="block text-[10px] uppercase tracking-wider opacity-70">
+                Class
+              </span>
+
+              <span className="block text-lg leading-none">
+                {g}
+              </span>
             </button>
           ))}
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Subject</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Subject
+        </h2>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           {SUBJECTS.map((s) => {
             const meta = SUBJECT_META[s];
             const Icon = meta.icon;
             const active = subject === s;
+
             return (
               <button
                 key={s}
@@ -161,15 +226,26 @@ function HomePage() {
                   setSubBranch(null);
                 }}
                 className={`p-3 rounded-2xl border-2 text-left transition flex items-center gap-2.5 ${
-                  active ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card hover:border-primary/40"
+                  active
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border bg-card hover:border-primary/40"
                 }`}
               >
-                <div className="size-10 rounded-xl grid place-items-center text-white shrink-0" style={{ backgroundColor: meta.color }}>
+                <div
+                  className="size-10 rounded-xl grid place-items-center text-white shrink-0"
+                  style={{ backgroundColor: meta.color }}
+                >
                   <Icon className="size-5" />
                 </div>
+
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate">{s}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{meta.blurb}</p>
+                  <p className="font-semibold text-sm truncate">
+                    {s}
+                  </p>
+
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {meta.blurb}
+                  </p>
                 </div>
               </button>
             );
@@ -182,6 +258,7 @@ function HomePage() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Pick a Social Studies branch
           </h2>
+
           <div className="flex flex-wrap gap-2">
             {SOCIAL_BRANCHES.map((b) => (
               <button
@@ -205,13 +282,18 @@ function HomePage() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Suggested topics
           </h2>
+
           {topicsQ.isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
-              Picking topics for Class {grade} {effectiveSub ?? subject}…
+
+              Picking topics for Class {grade}{" "}
+              {effectiveSub ?? subject}…
             </div>
           ) : topicsQ.isError ? (
-            <p className="text-sm text-destructive">Could not load topics. Try again.</p>
+            <p className="text-sm text-destructive">
+              Could not load topics. Try again.
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {topicsQ.data?.topics.map((t) => (
@@ -234,10 +316,14 @@ function HomePage() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Or type any topic
           </h2>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (customTopic.trim()) startMut.mutate(customTopic.trim());
+
+              if (customTopic.trim()) {
+                startMut.mutate(customTopic.trim());
+              }
             }}
             className="flex gap-2"
           >
@@ -247,8 +333,18 @@ function HomePage() {
               onChange={(e) => setCustomTopic(e.target.value)}
               className="h-11"
             />
-            <Button type="submit" disabled={startMut.isPending || !customTopic.trim()} className="h-11">
-              {startMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+
+            <Button
+              type="submit"
+              disabled={startMut.isPending || !customTopic.trim()}
+              className="h-11"
+            >
+              {startMut.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+
               <span className="ml-1.5">Start</span>
             </Button>
           </form>
