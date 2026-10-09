@@ -7,7 +7,7 @@ import {
   startSession,
   SUBJECTS,
 } from "../../lib/study.functions";
-import { Card } from "@/components/ui/card";
+import { Card } from "../../components/ui/card";
 import { Loader2, Library, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
@@ -58,9 +58,7 @@ function NcertPage() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold leading-tight">
-            NCERT Library
-          </h1>
+          <h1 className="text-2xl font-bold leading-tight">NCERT Library</h1>
           <p className="text-sm text-muted-foreground">
             Pick a class and subject. We'll show NCERT chapters with easy AI
             explanations, notes, examples, and important Q&amp;A.
@@ -123,9 +121,7 @@ function NcertPage() {
             Loading chapters…
           </div>
         ) : chaptersQ.isError ? (
-          <p className="text-sm text-destructive">
-            Could not load chapters.
-          </p>
+          <p className="text-sm text-destructive">Could not load chapters.</p>
         ) : (
           <div className="space-y-2">
             {chaptersQ.data?.chapters.map((c) => (
@@ -138,18 +134,14 @@ function NcertPage() {
                     {c.number}
                   </div>
 
-                  <p className="flex-1 font-medium text-sm">
-                    {c.title}
-                  </p>
+                  <p className="flex-1 font-medium text-sm">{c.title}</p>
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     disabled={startMut.isPending}
                     onClick={() =>
-                      startMut.mutate(
-                        `Chapter ${c.number}: ${c.title}`,
-                      )
+                      startMut.mutate(`Chapter ${c.number}: ${c.title}`)
                     }
                     className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50 hover:opacity-90 transition"
                   >
