@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, Mail, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -23,8 +23,14 @@ export const Route = createFileRoute("/auth")({
 });
 
 function safeNext(value: unknown) {
-  if (typeof value !== "string") return "/";
-  if (!value.startsWith("/") || value.startsWith("//")) return value;
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//")
+  ) {
+    return "/";
+  }
+
   return value;
 }
 
@@ -49,6 +55,47 @@ function AuthPage() {
 
   const [nextPath] = useState("/");
 
+  // Handle an existing or newly created OAuth session.
+  useEffect(() => {
+    let active = true;
+    let redirectStarted = false;
+
+    const goToNextPage = () => {
+      if (!active || redirectStarted) return;
+
+      redirectStarted = true;
+      void navigate({ to: safeNext(nextPath) });
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        session &&
+        (event === "SIGNED_IN" || event === "INITIAL_SESSION")
+      ) {
+        goToNextPage();
+      }
+    });
+
+    // Also check whether Supabase has already restored the session.
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error("Session check failed:", error.message);
+        return;
+      }
+
+      if (data.session) {
+        goToNextPage();
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, nextPath]);
+
   const handleGoogle = async () => {
     try {
       setLoading(true);
@@ -57,7 +104,7 @@ function AuthPage() {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth?next=${encodeURIComponent(
-            nextPath,
+            safeNext(nextPath),
           )}`,
         },
       });
@@ -67,7 +114,6 @@ function AuthPage() {
       toast.error(
         error instanceof Error ? error.message : "Google login failed.",
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -95,7 +141,7 @@ function AuthPage() {
         if (error) throw error;
 
         toast.success("Account created successfully.");
-        await navigate({ to: nextPath });
+        await navigate({ to: safeNext(nextPath) });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -105,7 +151,7 @@ function AuthPage() {
         if (error) throw error;
 
         toast.success("Welcome back!");
-        await navigate({ to: nextPath });
+        await navigate({ to: safeNext(nextPath) });
       }
     } catch (error) {
       toast.error(
@@ -148,10 +194,9 @@ function AuthPage() {
         if (signInErr) throw signInErr;
 
         toast.success(`Welcome, ${displayName.trim()}!`);
-        await navigate({ to: nextPath });
+        await navigate({ to: safeNext(nextPath) });
       } else {
-        const loginEmail =
-          email.trim() || usernameToEmail(username);
+        const loginEmail = email.trim() || usernameToEmail(username);
 
         const { error } = await supabase.auth.signInWithPassword({
           email: loginEmail,
@@ -161,7 +206,7 @@ function AuthPage() {
         if (error) throw error;
 
         toast.success("Welcome back!");
-        await navigate({ to: nextPath });
+        await navigate({ to: safeNext(nextPath) });
       }
     } catch (error) {
       toast.error(
@@ -209,7 +254,7 @@ function AuthPage() {
       if (error) throw error;
 
       toast.success("Continuing as guest.");
-      await navigate({ to: nextPath });
+      await navigate({ to: safeNext(nextPath) });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Guest mode is unavailable.",
