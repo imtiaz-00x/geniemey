@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 // Agar "model not found" error aaye to yahan naam badal dena
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 const PROMPTS = {
