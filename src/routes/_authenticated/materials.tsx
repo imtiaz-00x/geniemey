@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MaterialAiPanel } from "@/components/material-ai-panel";
 import {
   FileText,
   Upload,
@@ -62,6 +63,10 @@ function MaterialsPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [aiMaterial, setAiMaterial] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   const materialsQ = useQuery({
     queryKey: ["materials"],
@@ -384,6 +389,24 @@ function MaterialsPage() {
                     {material.file_path && (
                       <Button
                         size="sm"
+                        variant="outline"
+                        className="shrink-0 rounded-full"
+                        onClick={() =>
+                          setAiMaterial({
+                            id: material.id,
+                            title: material.title,
+                          })
+                        }
+                        title="Analyze, notes, flashcards, quiz"
+                      >
+                        <Sparkles className="size-4 mr-1" />
+                        AI
+                      </Button>
+                    )}
+
+                    {material.file_path && (
+                      <Button
+                        size="sm"
                         variant="ghost"
                         className="shrink-0"
                         disabled={openMut.isPending}
@@ -424,6 +447,15 @@ function MaterialsPage() {
           </div>
         )}
       </section>
+
+      {aiMaterial && (
+        <MaterialAiPanel
+          key={aiMaterial.id}
+          materialId={aiMaterial.id}
+          title={aiMaterial.title}
+          onClose={() => setAiMaterial(null)}
+        />
+      )}
     </div>
   );
 }
