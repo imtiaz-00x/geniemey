@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-// Agar "model not found" error aaye to yahan naam badal dena
-const MODEL = "gemini-3.8-flash";
+const MODEL = "gemini-2.5-flash";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const REQUEST_TIMEOUT_MS = 50_000;
 
 const PROMPTS = {
   analyze:
@@ -29,89 +29,179 @@ export const generateFromMaterial = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
 
-    const { data: m, error } = await context.supabase
+    if (!apiKey) {
+      throw new Error("Server configuration error: GEMINI_API_KEY is missing.");
+    }
+
+    const { data: material, error } = await context.supabase
       .from("materials")
       .select("title, file_path, mime_type, content_text")
       .eq("id", data.id)
       .eq("user_id", context.userId)
       .single();
-    if (error) throw new Error(error.message);
+
+    if (error || !material) {
+      throw new Error("Could not find this material. Refresh and try again.");
+    }
 
     const parts: Array<Record<string, unknown>> = [
-      { text: PROMPTS[data.action] },
+      { text: `${PROMPTS[data.action]}\n\nMaterial title: ${material.title}` },
     ];
 
-    if (m.content_text) {
-      parts.push({ text: m.content_text });
-    } else if (m.file_path) {
-      const { data: blob, error: dlError } = await context.supabase.storage
-        .from("materials")
-        .download(m.file_path);
-      if (dlError || !blob) {
-        throw new Error(dlError?.message ?? "Could not read the file.");
+    if (material.content_text?.trim()) {
+      parts.push({ text: material.content_text.slice(0, 100_000) });
+    } else if (material.file_path) {
+      const { data: blob, error: downloadError } =
+        await context.supabase.storage
+          .from("materials")
+          .download(material.file_path);
+
+      if (downloadError || !blob) {
+        throw new Error("Could not download the study file. Please try again.");
       }
+
       if (blob.size > MAX_FILE_BYTES) {
-        throw new Error("File is too large (max 10 MB).");
+        throw new Error("File is too large. The maximum supported size is 10 MB.");
       }
-      const mime = m.mime_type || blob.type || "";
+
+      const mime = (material.mime_type || blob.type || "").split(";")[0].trim();
+
       const supported =
         mime === "application/pdf" ||
         mime.startsWith("image/") ||
-        mime.startsWith("text/");
+        mime === "text/plain" ||
+        mime === "text/markdown";
+
       if (!supported) {
         throw new Error(
-          "This file type is not supported yet. Please use PDF, image or text files.",
+          "This file type is not supported for AI yet. Try a PDF, image or text file.",
         );
       }
+
       const base64 = Buffer.from(await blob.arrayBuffer()).toString("base64");
-      parts.push({ inline_data: { mime_type: mime, data: base64 } });
+
+      parts.push({
+        inline_data: {
+          mime_type: mime || "application/pdf",
+          data: base64,
+        },
+      });
     } else {
-      throw new Error("This material has no content to read.");
+      throw new Error("This material has no readable content.");
     }
 
-    const wantsJson = data.action === "flashcards" || data.action === "quiz";
+    const wantsJson =
+      data.action === "flashcards" || data.action === "quiz";
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts }],
-          generationConfig: wantsJson
-            ? { responseMimeType: "application/json" }
-            : {},
-        }),
-      },
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS,
     );
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Gemini error ${res.status}: ${errText.slice(0, 300)}`);
+    let responseText: string;
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts }],
+            generationConfig: wantsJson
+              ? { responseMimeType: "application/json" }
+              : {},
+          }),
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+
+        if (response.status === 429) {
+          throw new Error("AI limit reached. Please wait and try again.");
+        }
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Gemini API key is invalid or does not have access.");
+        }
+
+        if (response.status === 404) {
+          throw new Error(
+            `Gemini model "${MODEL}" was not found. Check the model name and API access.`,
+          );
+        }
+
+        throw new Error(
+          `Gemini request failed (${response.status}): ${errorBody.slice(0, 250)}`,
+        );
+      }
+
+      const result = (await response.json()) as {
+        candidates?: Array<{
+          finishReason?: string;
+          content?: { parts?: Array<{ text?: string }> };
+        }>;
+        promptFeedback?: { blockReason?: string };
+      };
+
+      if (result.promptFeedback?.blockReason) {
+        throw new Error("AI could not process this material. Try another file.");
+      }
+
+      const candidate = result.candidates?.[0];
+
+      responseText =
+        candidate?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+
+      if (!responseText.trim()) {
+        throw new Error(
+          candidate?.finishReason === "MAX_TOKENS"
+            ? "The response was too long. Try a smaller file."
+            : "AI returned an empty response. Please try again.",
+        );
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(
+          "AI request timed out. Try a smaller file or try again later.",
+        );
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const json = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const text =
-      json.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text ?? "")
-        .join("") ?? "";
-
-    if (!text) throw new Error("AI returned an empty response.");
 
     if (wantsJson) {
       try {
-        return { action: data.action, items: JSON.parse(text) as unknown[] };
-      } catch {
-        throw new Error("AI response could not be read. Please try again.");
+        const cleaned = responseText
+          .trim()
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/, "");
+
+        const items: unknown = JSON.parse(cleaned);
+
+        if (!Array.isArray(items) || items.length === 0) {
+          throw new Error("AI returned no quiz questions or flashcards.");
+        }
+
+        return { action: data.action, items };
+      } catch (error) {
+        if (error instanceof Error &&
+            error.message === "AI returned no quiz questions or flashcards.") {
+          throw error;
+        }
+
+        throw new Error("AI response format was invalid. Please try again.");
       }
     }
 
-    return { action: data.action, text };
+    return { action: data.action, text: responseText };
   });
