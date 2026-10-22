@@ -33,8 +33,8 @@ const sectionSchema = z.enum(["school", "ncert", "exam"]).default("school");
 
 function model() {
   return (async () => {
-    const { createGeminiProvider } = await import("./ai-gateway.server");
-    return createGeminiProvider()("gemini-3.6-flash");
+    const { createLovableAiGatewayProvider, getLovableApiKey } = await import("./ai-gateway.server");
+    return createLovableAiGatewayProvider(getLovableApiKey())("google/gemini-3-flash-preview");
   })();
 }
 
@@ -692,7 +692,7 @@ Use exactly this Markdown structure and keep every section short and scannable:
 ## 9. 30-Second Revision (5 crisp bullets)
 
 Target 700-900 words. No preamble, start directly with the heading.`,
-      
+      providerOptions: { lovable: { reasoningEffort: "none" } },
     });
     return { notes: text };
   });
@@ -735,7 +735,7 @@ Use exactly this Markdown structure:
 ## Quick Check (3 short questions with one-line answers)
 
 Target 500-750 words. Start directly with the heading.`,
- 
+      providerOptions: { lovable: { reasoningEffort: "none" } },
     });
     return { explanation: text };
   });
