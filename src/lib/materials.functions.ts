@@ -244,13 +244,11 @@ function fileParts(
 
 /** Reads the uploaded file (PDF / image) from storage as inline AI input. */
 async function loadFileBytes(
-  ctx: { supabase: import("@/integrations/supabase/auth-middleware").unknown },
-  material: { storage_path: string | null },
+  ctx: { supabase: { storage: { from: (bucket: string) => { download: (path: string) => Promise<{ data: Blob | null; error: unknown }> } } } },
+  material: { file_type: string | null; storage_path: string | null },
 ): Promise<{ base64: string; mime: string } | null> {
-  type StoragePathRow = { file_type: string | null; storage_path: string | null };
-  const row = material as StoragePathRow;
-  if (!row.storage_path || !row.file_type) return null;
-  if (row.file_type !== "application/pdf" && !row.file_type.startsWith("image/")) return null;
+  if (!material.storage_path || !material.file_type) return null;
+  if (material.file_type !== "application/pdf" && !material.file_type.startsWith("image/")) return null;
   const path = row.storage_path.replace(/^materials\//, "");
   const { data, error } = await ctx.supabase.storage.from("materials").download(path);
   if (error || !data) throw new Error("Could not read the uploaded file. Try re-uploading it.");
@@ -324,21 +322,19 @@ export const generateMaterialTool = createServerFn({ method: "POST" })
     }
 
     const sourceText = (m.text_preview ?? "").trim();
+    let fileInput: Array<Record<string, unknown>> = [];
+    const sourceBlock = sourceText
+      ? `STUDY MATERIAL (text extracted from the upload):\n"""\n${sourceText.slice(0, 30_000)}\n"""`
+      : `(No extracted text — read the attached document directly.)`;
     if (!sourceText) {
-      const bytes = await loadFileBytes(context as never, m as never);
+      const bytes = await loadFileBytes(context, m);
       if (!bytes) {
         throw new Error(
           "There is no readable text in this material to study from. Upload a PDF, image, DOCX, PPTX or text file with real content.",
         );
       }
-      var fileInput = fileParts(m as never, bytes);
-    } else {
-      var fileInput = [] as Array<Record<string, unknown>>;
+      fileInput = fileParts(m, bytes);
     }
-
-    const sourceBlock = sourceText
-      ? `STUDY MATERIAL (text extracted from the upload):\n"""\n${sourceText.slice(0, 30_000)}\n"""`
-      : `(No extracted text — read the attached document directly.)`;
 
     const materialLine = `Material title: "${m.title}"${m.description ? ` — ${m.description}` : ""}`;
 
